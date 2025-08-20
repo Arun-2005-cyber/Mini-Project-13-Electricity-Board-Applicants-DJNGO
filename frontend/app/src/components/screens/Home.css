@@ -1,0 +1,18 @@
+/* Home.css */
+
+.table-container {
+  max-height: 700px;  /* or adjust as per your UI */
+  overflow-y: auto;
+  border: 1px solid #ddd;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  top: 0;
+  background-color: #f8f9fa;
+  z-index: 1;
+}

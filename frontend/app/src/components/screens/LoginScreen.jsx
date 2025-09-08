@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Form, Button } from 'react-bootstrap';
-import API_URL from "../config";   // ✅ import API_URL
+import API_URL from "../../config";
+   // ✅ import API_URL
 
 function LoginScreen() {
   const [username, setUsername] = useState('');

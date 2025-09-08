@@ -4,7 +4,8 @@ import './Home.css';
 import Datepicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Link } from 'react-router-dom';
-import API_URL from "../config";   // ✅ Import API URL from config.js
+import API_URL from "../../config";
+  // ✅ Import API URL from config.js
 
 function Home() {
   const [data, setData] = useState([]);

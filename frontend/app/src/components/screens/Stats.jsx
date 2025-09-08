@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
-import API_URL from "../config";   // ✅ import API_URL
+import API_URL from "../../config";
+   // ✅ import API_URL
 
 function Stats() {
   const [selectedStatus, setselectedStatus] = useState('');

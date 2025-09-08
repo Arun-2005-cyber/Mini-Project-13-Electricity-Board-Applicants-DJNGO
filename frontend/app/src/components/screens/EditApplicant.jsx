@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import { Row, Col, Container, Form, Button } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import API_URL from "../config";   // ✅ import API_URL
+import API_URL from "../../config";   // ✅ import API_URL
 
 function EditApplicant() {
   const { id } = useParams();

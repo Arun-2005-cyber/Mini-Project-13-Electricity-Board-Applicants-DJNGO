@@ -42,6 +42,11 @@ class Applicant(models.Model):
     GovtID_Type=models.CharField(max_length=20,choices=GOVT_ID_CHOICES)
     ID_Number=models.CharField(max_length=100)
     Category=models.CharField(max_length=20,choices=CATEGORY_CHOICES)
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("approved", "Approved"), ("rejected", "Rejected")],
+        default="pending",
+    )
 
     def __str__(self):
         return self.Applicant_Name

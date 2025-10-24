@@ -1,0 +1,11 @@
+.table th, .table td {
+  vertical-align: middle !important;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pagination .page-link {
+  color: #007bff;
+}

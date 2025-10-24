@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
+import json, jwt, datetime
+from django.conf import settings
 
 
 @csrf_exempt
@@ -35,6 +37,7 @@ def signup(request):
 
 
 
+
 @csrf_exempt
 def login_view(request):
     if request.method == "POST":
@@ -45,15 +48,32 @@ def login_view(request):
 
             user = authenticate(username=username, password=password)
             if user is not None:
+                # ✅ Create JWT token
+                payload = {
+                    "id": user.id,
+                    "username": user.username,
+                    "is_admin": user.is_staff,
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12),
+                    "iat": datetime.datetime.utcnow()
+                }
+
+                token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
                 return JsonResponse({
                     "status": "success",
                     "message": "Login successful",
                     "username": user.username,
                     "email": user.email,
+                    "token": token,           # 🔥 send token to frontend
+                    "is_admin": user.is_staff
                 })
             else:
-                return JsonResponse({"status": "error", "message": "Invalid credentials"}, status=401)
+                return JsonResponse(
+                    {"status": "error", "message": "Invalid credentials"},
+                    status=401
+                )
+
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    else:
-        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)

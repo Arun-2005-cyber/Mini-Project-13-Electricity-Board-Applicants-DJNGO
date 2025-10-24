@@ -34,7 +34,7 @@ const isAdmin = userData?.is_admin;
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Token ${token}`,
         },
       });
 

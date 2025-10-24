@@ -19,7 +19,6 @@ const isAdmin = userData?.is_admin;
   useEffect(() => {
     if (!token || isAdmin !== "true") {
       alert("Unauthorized! Only admin can access this page.");
-      window.location.href = "/login";
       return;
     }
     fetchApplicants();

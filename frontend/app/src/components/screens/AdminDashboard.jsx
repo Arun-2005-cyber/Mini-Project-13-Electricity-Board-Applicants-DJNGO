@@ -11,8 +11,10 @@ const AdminDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("all");
 
-  const token = localStorage.getItem("token");
-  const isAdmin = localStorage.getItem("is_admin");
+const userData = JSON.parse(localStorage.getItem("user"));
+const token = userData?.token;
+const isAdmin = userData?.is_admin;
+
 
   useEffect(() => {
     if (!token || isAdmin !== "true") {

@@ -13,11 +13,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from .models import Applicant
 from .serializers import ApplicantSerializer
+from rest_framework.authentication import TokenAuthentication
 
 # Create your views here.
 def index(request):
@@ -248,7 +249,8 @@ def connectionrequestdata(request):
     return JsonResponse({'labels':labels,'total_requests':total_requests})    
 
 # ✅ View all applicants (Admin only)
-@api_view(['GET'])
+@api_view(['GET','PATCH'])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_applicant_list(request):
     applicants = Applicant.objects.all()

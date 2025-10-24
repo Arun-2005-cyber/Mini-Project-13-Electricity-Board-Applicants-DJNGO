@@ -16,6 +16,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
+    "rest_framework.authtoken",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

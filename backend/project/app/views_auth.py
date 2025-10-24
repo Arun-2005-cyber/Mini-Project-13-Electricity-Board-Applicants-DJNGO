@@ -5,6 +5,8 @@ from django.http import JsonResponse
 import json
 import json, jwt, datetime
 from django.conf import settings
+from rest_framework.authtoken.models import Token
+
 
 
 @csrf_exempt
@@ -37,7 +39,6 @@ def signup(request):
 
 
 
-
 @csrf_exempt
 def login_view(request):
     if request.method == "POST":
@@ -47,33 +48,19 @@ def login_view(request):
             password = data.get("password")
 
             user = authenticate(username=username, password=password)
-            if user is not None:
-                # ✅ Create JWT token
-                payload = {
-                    "id": user.id,
-                    "username": user.username,
-                    "is_admin": user.is_staff,
-                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12),
-                    "iat": datetime.datetime.utcnow()
-                }
-
-                token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-
+            if user:
+                token, _ = Token.objects.get_or_create(user=user)
                 return JsonResponse({
                     "status": "success",
                     "message": "Login successful",
                     "username": user.username,
                     "email": user.email,
-                    "token": token,           # 🔥 send token to frontend
-                    "is_admin": user.is_staff
+                    "token": token.key,     # <---- THIS is the key line
+                    "is_admin": user.is_staff,  # optional
                 })
             else:
-                return JsonResponse(
-                    {"status": "error", "message": "Invalid credentials"},
-                    status=401
-                )
-
+                return JsonResponse({"status": "error", "message": "Invalid credentials"}, status=401)
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+    else:
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)

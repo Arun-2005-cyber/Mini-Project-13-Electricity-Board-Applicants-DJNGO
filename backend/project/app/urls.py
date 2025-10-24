@@ -16,10 +16,9 @@ urlpatterns = [
     path('update_applicant/<int:id>/', views.update_applicant, name='update_applicant'),
     path('connectionvisualization/',views.connectionvisualization,name='connectionvisualization'),
     path('connectionrequestdata/',views.connectionrequestdata,name='connectionrequestdata'),
+    path('admin/applicants/', ApplicantListAPIView.as_view(), name='admin-applicants'),
+    path('admin/applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='admin-applicant-detail'),
     # path('login/',views.handlelogin,name='handlelogin')
 ]
 
-urlpatterns += [
-    path('admin/applicants/', ApplicantListAPIView.as_view(), name='admin-applicants'),
-    path('admin/applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='admin-applicant-detail'),
-]
+  

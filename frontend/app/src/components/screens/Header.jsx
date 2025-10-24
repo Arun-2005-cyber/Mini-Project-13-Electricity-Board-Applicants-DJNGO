@@ -28,12 +28,6 @@ function Header() {
                 </LinkContainer>
               </li>
 
-              <li className="nav-item">
-                <LinkContainer to='/admin/dashboard'>
-                  <Link className="nav-link text-white">Admin</Link>
-                </LinkContainer>
-              </li>
-
 
               {localStorage.getItem("user") ? (
                 <>

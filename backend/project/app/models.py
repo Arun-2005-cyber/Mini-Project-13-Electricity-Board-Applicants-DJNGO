@@ -62,7 +62,7 @@ class Connection(models.Model):
     Modified_Date=models.DateField(null=True,blank=True)
     Status=models.ForeignKey(Status,on_delete=models.CASCADE)
     Reviewer_ID=models.IntegerField()
-    Reviewer_Name=models.CharField()
+    Reviewer_Name = models.CharField(max_length=100, null=True, blank=True)
     Reviewer_Comments=models.CharField(max_length=50,choices=REVIEWER_COMMENTS_CHOICES)
 
     def __str__(self):

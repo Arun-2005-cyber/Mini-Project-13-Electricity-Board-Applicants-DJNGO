@@ -13,6 +13,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.contrib.auth import authenticate
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from .models import Applicant
+from .serializers import ApplicantSerializer
 
 # Create your views here.
 def index(request):
@@ -216,7 +221,7 @@ def update_applicant(request, id):
         
 
 def connectionvisualization(request):
-    connection_request=Connection.objects.all().values('Date_of_Application__year','DAte_of_Application__month').annotate(total_requests=Count('id'))
+    connection_requests = Connection.objects.all().values('Date_of_Application__year','Date_of_Application__month').annotate(total_requests=Count('id'))
 
     labels=[f"{x['Date_of_Application__year']}-{x['Date_of_Application__month']}" for x in connection_requests]
     total_requests=[x['total_requests'] for x in connection_requests] 
@@ -242,15 +247,21 @@ def connectionrequestdata(request):
 
     return JsonResponse({'labels':labels,'total_requests':total_requests})    
 
-# @csrf_exempt(['POST'])
-# def login_user(request):
-#     data = json.loads(request.body)
-#     username = data.get('username')
-#     password = data.get('password')
+# ✅ View all applicants (Admin only)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_applicant_list(request):
+    applicants = Applicant.objects.all()
+    serializer = ApplicantSerializer(applicants, many=True)
+    return Response(serializer.data)
 
-#     user = authenticate(username=username, password=password)
-
-#     if user is not None:
-#         return JsonResponse({'status': 'success', 'username': user.username, 'email': user.email})
-#     else:
-#         return JsonResponse({'status': 'fail', 'message': 'Invalid credentials'}, status=401)
+# ✅ Delete applicant (Admin only)
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def admin_delete_applicant(request, id):
+    try:
+        applicant = Applicant.objects.get(id=id)
+        applicant.delete()
+        return Response({'message': 'Applicant deleted successfully'})
+    except Applicant.DoesNotExist:
+        return Response({'error': 'Applicant not found'}, status=404)

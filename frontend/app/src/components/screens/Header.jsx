@@ -19,20 +19,57 @@ function Header() {
             <ul className="navbar-nav me-auto">
               <li className="nav-item">
                 <LinkContainer to='/'>
-                  <Link className="nav-link  text-white">Home</Link>
+                  <Link className="nav-link text-white">Home</Link>
                 </LinkContainer>
               </li>
               <li className="nav-item">
                 <LinkContainer to='/statisticsCollection'>
-                  <Link className="nav-link  text-white">Dash Statistics</Link>
+                  <Link className="nav-link text-white">Dash Statistics</Link>
                 </LinkContainer>
               </li>
+
               <li className="nav-item">
-                <LinkContainer to='/login'>
-                  <Link className="nav-link  text-white">Login</Link>
+                <LinkContainer to='/admin/dashboard'>
+                  <Link className="nav-link text-white">Admin</Link>
                 </LinkContainer>
               </li>
+
+
+              {localStorage.getItem("user") ? (
+                <>
+                  <li className="nav-item">
+                    <span className="nav-link text-warning">
+                      Hello, {JSON.parse(localStorage.getItem("user")).username}
+                    </span>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className="btn btn-danger btn-sm ms-2"
+                      onClick={() => {
+                        localStorage.removeItem("user");
+                        window.location.href = "/login";
+                      }}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="nav-item">
+                    <LinkContainer to='/login'>
+                      <Link className="nav-link text-white">Login</Link>
+                    </LinkContainer>
+                  </li>
+                  <li className="nav-item">
+                    <LinkContainer to='/signup'>
+                      <Link className="nav-link text-white">Signup</Link>
+                    </LinkContainer>
+                  </li>
+                </>
+              )}
             </ul>
+
           </div>
         </div>
       </nav>

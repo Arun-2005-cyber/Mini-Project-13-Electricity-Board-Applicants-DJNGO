@@ -20,6 +20,6 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path('api/admin/applicants/', ApplicantListAPIView.as_view(), name='admin-applicants'),
-    path('api/admin/applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='admin-applicant-detail'),
+    path('admin/applicants/', ApplicantListAPIView.as_view(), name='admin-applicants'),
+    path('admin/applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='admin-applicant-detail'),
 ]

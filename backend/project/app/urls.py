@@ -8,9 +8,9 @@ from app.views_auth import signup, login_view
 
 urlpatterns = [
     path("",views.index,name="index"),
-    path("api/signup/", signup, name="signup"),
-    path("api/login/", login_view, name="login_api"),
-    path('api/me/', CurrentUserAPIView.as_view(), name='api-me'),
+    path("signup/", signup, name="signup"),
+    path("login/", login_view, name="login_api"),
+    path('me/', CurrentUserAPIView.as_view(), name='api-me'),
     path("uploaddata", views.uploaddata, name="uploaddata"),
     path("getApplicantsData/",ConnectionListView.as_view(),name="connection_list"),
     path('update_applicant/<int:id>/', views.update_applicant, name='update_applicant'),

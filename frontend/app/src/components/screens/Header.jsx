@@ -27,8 +27,6 @@ function Header() {
                   <Link className="nav-link text-white">Dash Statistics</Link>
                 </LinkContainer>
               </li>
-
-
               {localStorage.getItem("user") ? (
                 <>
                   <li className="nav-item">

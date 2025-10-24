@@ -6,7 +6,6 @@ import EditApplicant from './components/screens/EditApplicant.jsx';
 import Stats from './components/screens/Stats.jsx';
 import LoginScreen from './components/screens/LoginScreen.jsx';
 import SignupScreen from './components/screens/SignupScreen.jsx';
-import AdminDashboard from './components/screens/AdminDashboard.jsx';
 
 
 function App() {
@@ -19,7 +18,6 @@ function App() {
         <Route path='/statisticsCollection/' element={<Stats/>} />
         <Route path='/login/' element={<LoginScreen/>} />
         <Route path='/signup/' element={<SignupScreen />} />
-        <Route path='/admin/dashboard/' element={<AdminDashboard />} />
 
       </Routes>
     </BrowserRouter>

@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
 import API_URL from "../../config";
-   // ✅ import API_URL
+import Loader from "../Loader";
+import Message from "../Message";
 
 function Stats() {
   const [selectedStatus, setselectedStatus] = useState('');
   const [chartData, setChartData] = useState({ labels: [], total_requests: [] });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const canvasRef2 = useRef(null);
@@ -17,15 +20,20 @@ function Stats() {
   }, [selectedStatus]);
 
   const fetchData = async (status) => {
+    setLoading(true);
+    setError("");
     try {
-      // ✅ use API_URL instead of localhost
       const url = `${API_URL}/api/connectionrequestdata?status=${status}`;
       const response = await fetch(url);
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
       const data = await response.json();
       setChartData(data);
       updateChart(data);
     } catch (error) {
       console.error("Error fetching data", error);
+      setError("⚠️ Failed to load data. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,9 +56,7 @@ function Stats() {
       options: {
         responsive: true,
         scales: {
-          y: {
-            beginAtZero: true
-          }
+          y: { beginAtZero: true }
         }
       }
     });
@@ -70,9 +76,7 @@ function Stats() {
           borderWidth: 1
         }]
       },
-      options: {
-        responsive: true
-      }
+      options: { responsive: true }
     });
   };
 
@@ -86,14 +90,11 @@ function Stats() {
       chartRef2.current.data.datasets[0].data = data.total_requests;
       chartRef2.current.update();
     } else {
-      // Delay creation slightly to ensure canvas is ready
       setTimeout(() => createChart(data), 50);
     }
   };
 
-  const handleStatusChange = (event) => {
-    setselectedStatus(event.target.value);
-  };
+  const handleStatusChange = (event) => setselectedStatus(event.target.value);
 
   return (
     <div className="container m-5 p-5 card chart">
@@ -101,6 +102,7 @@ function Stats() {
         <div className="col-md-3">
           <Link to='/' className='btn btn-primary my-1'>Go Back</Link>
         </div>
+
         <div className="col-md-12">
           <h5>Number of connection requests in every month visualization</h5>
         </div>
@@ -122,12 +124,21 @@ function Stats() {
           </select>
         </div>
 
-        <div className="col-md-6 mt-4">
-          <canvas ref={canvasRef} width="100" height="50"></canvas>
+        <div className="col-md-12 mt-3">
+          {loading && <Loader />}
+          {error && <Message variant="danger">{error}</Message>}
         </div>
-        <div className="col-md-6 mt-4">
-          <canvas ref={canvasRef2} width="100" height="50"></canvas>
-        </div>
+
+        {!loading && !error && (
+          <>
+            <div className="col-md-6 mt-4">
+              <canvas ref={canvasRef} width="100" height="50"></canvas>
+            </div>
+            <div className="col-md-6 mt-4">
+              <canvas ref={canvasRef2} width="100" height="50"></canvas>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

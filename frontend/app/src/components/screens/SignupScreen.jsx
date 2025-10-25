@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Form, Button, InputGroup } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Form, Button, InputGroup, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
 import API_URL from "../../config";
 import { useNavigate, Link } from "react-router-dom";
@@ -12,6 +12,8 @@ function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
   const [msg, setMsg] = useState("");
+  const [msgVariant, setMsgVariant] = useState("info");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
@@ -26,14 +28,25 @@ function SignupScreen() {
     );
   };
 
+  // ✅ Auto-hide messages after 3 seconds
+  useEffect(() => {
+    if (msg) {
+      const timer = setTimeout(() => setMsg(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [msg]);
+
   const handleSignup = async (e) => {
     e.preventDefault();
+
     if (!validateForm()) {
+      setMsgVariant("danger");
       setMsg("❌ Please fill all fields correctly and accept the terms.");
       return;
     }
 
     try {
+      setLoading(true);
       const res = await axios.post(`${API_URL}/api/signup/`, {
         username,
         email,
@@ -41,13 +54,18 @@ function SignupScreen() {
       });
 
       if (res.data.status === "success") {
+        setMsgVariant("success");
         setMsg("✅ Account created successfully!");
         setTimeout(() => navigate("/login"), 1500);
       } else {
+        setMsgVariant("danger");
         setMsg("❌ " + (res.data.message || "Signup failed."));
       }
     } catch (err) {
+      setMsgVariant("danger");
       setMsg("❌ " + (err.response?.data?.message || "Server Error"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,6 +74,14 @@ function SignupScreen() {
       <div className="col-3"></div>
       <div className="col-6 card p-4 shadow-lg rounded-4">
         <h2 className="text-center mb-3">Create Account</h2>
+
+        {/* ✅ Message Alert */}
+        {msg && (
+          <Alert variant={msgVariant} className="text-center py-2">
+            {msg}
+          </Alert>
+        )}
+
         <Form onSubmit={handleSignup}>
           <Form.Group className="mb-3">
             <Form.Label>Username</Form.Label>
@@ -125,7 +151,7 @@ function SignupScreen() {
               label={
                 <>
                   I agree to the{" "}
-                  <Link href="#" style={{ color: "#007bff" }}>
+                  <Link to="#" style={{ color: "#007bff" }}>
                     Terms & Conditions
                   </Link>
                 </>
@@ -138,9 +164,23 @@ function SignupScreen() {
           <Button
             className="mt-2 w-100"
             type="submit"
-            disabled={!validateForm()}
+            disabled={!validateForm() || loading}
           >
-            Signup
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Signing up...
+              </>
+            ) : (
+              "Signup"
+            )}
           </Button>
         </Form>
 
@@ -150,8 +190,6 @@ function SignupScreen() {
             Login here
           </Link>
         </div>
-
-        {msg && <p className="text-center mt-3">{msg}</p>}
       </div>
       <div className="col-3"></div>
     </div>

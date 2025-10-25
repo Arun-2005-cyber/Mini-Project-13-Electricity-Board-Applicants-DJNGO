@@ -1,8 +1,8 @@
 from typing import Any
 from django.db.models.query import QuerySet
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render, HttpResponse
 import pandas as pd
-from .models import Applicant,Status,Connection
+from .models import Applicant, Status, Connection
 from datetime import datetime
 from django.views.generic import ListView
 from django.http import JsonResponse
@@ -16,16 +16,18 @@ from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from .models import Applicant
 from .serializers import ApplicantSerializer
 from rest_framework.authentication import TokenAuthentication
 
+
 # Create your views here.
 def index(request):
-    return render(request,"index.html")
+    return render(request, "index.html")
+
 
 def login(request):
-    return render(request,"login.html")
+    return render(request, "login.html")
+
 
 def uploaddata(request):
     try:
@@ -69,11 +71,12 @@ def uploaddata(request):
 
                 Date_of_Application = datetime.strptime(row['Date_of_Application'], "%m/%d/%Y")
                 Date_of_Approval = None
-                if not pd.isna(row['Date_of_Approval']):
+                if not pd.isna(row.get('Date_of_Approval', None)):
                     try:
                         Date_of_Approval = datetime.strptime(row['Date_of_Approval'], "%m/%d/%Y")
-                    except:
-                        pass
+                    except Exception:
+                        # ignore malformed dates
+                        Date_of_Approval = None
                 Modified_Date = datetime.strptime(row['Modified_Date'], "%m/%d/%Y")
 
                 Connection.objects.update_or_create(
@@ -84,15 +87,15 @@ def uploaddata(request):
                         'Date_of_Approval': Date_of_Approval,
                         'Modified_Date': Modified_Date,
                         'Status': status,
-                        'Reviewer_ID': row['Reviewer_ID'],
-                        'Reviewer_Name': row['Reviewer_Name'],
-                        'Reviewer_Comments': row['Reviewer_Comments']
+                        'Reviewer_ID': row.get('Reviewer_ID'),
+                        'Reviewer_Name': row.get('Reviewer_Name'),
+                        'Reviewer_Comments': row.get('Reviewer_Comments')
                     }
                 )
 
-                print(f"Processed ID: {row['ID']}")
+                print(f"Processed ID: {row.get('ID')}")
 
-            # Commit every chunk
+            # Close DB connection per chunk to avoid long lived connection issues
             from django.db import connection
             connection.close()
 
@@ -103,78 +106,99 @@ def uploaddata(request):
 
 
 class ConnectionListView(ListView):
-    model=Connection
-    context_object_name='connection'
-    paginate_by=50
+    model = Connection
+    context_object_name = 'connection'
+    paginate_by = 50
+    ordering = ['id']  # change to ['-id'] for newest first
 
     def get_queryset(self):
-        queryset=super().get_queryset()
-        search_query=self.request.GET.get('search')
+        queryset = super().get_queryset().select_related('Applicant', 'Status').order_by(*self.ordering)
+        search_query = self.request.GET.get('search', None)
 
-        #Reterieve date range parameters
-        start_date_param= self.request.GET.get('start_date')
-        end_date_param= self.request.GET.get('end_date')
+        # Date filters
+        start_date_param = self.request.GET.get('start_date')
+        end_date_param = self.request.GET.get('end_date')
+        start_date = parse_date(start_date_param) if start_date_param else None
+        end_date = parse_date(end_date_param) if end_date_param else None
 
-        #Parse date range parameters if provided
-        start_date= parse_date(start_date_param) if start_date_param else None
-        end_date= parse_date(end_date_param) if end_date_param else None
-
-        # Filter connections queryset based on the search query
+        # Apply search
         if search_query:
-            queryset=queryset.filter(id__icontains=search_query)
+            try:
+                search_int = int(search_query)
+                queryset = queryset.filter(id=search_int)
+            except ValueError:
+                queryset = queryset.filter(Applicant__Applicant_Name__icontains=search_query)
 
-         # Filter connections queryset based on the date range
+        # Apply date filters
         if start_date and end_date:
-            queryset=queryset.filter(Date_of_Application__gte=start_date,Date_of_Application__lte=end_date)
+            queryset = queryset.filter(Date_of_Application__gte=start_date, Date_of_Application__lte=end_date)
 
-        return queryset 
-    
+        return queryset
+
     def get_context_data(self, **kwargs):
-        context=super().get_context_data(**kwargs)
-        context['search_query']=self.request.GET.get('search')
-        return context 
-    
-    def render_to_response(self, context, **response_kwargs):
-        serialized_data=[
-            {
-                'id':conn.id,
-                'Load_Applied':conn.Load_Applied,
-                'Date_of_Application':conn.Date_of_Application,
-                'Status':conn.Status.Status_Name,
-                'Applicant':{
-                    'Applicant_Name':conn.Applicant.Applicant_Name,
-                    'Gender':conn.Applicant.Gender,
-                    'District':conn.Applicant.District,
-                    'State':conn.Applicant.State,
-                    'Pincode':conn.Applicant.Pincode,
-                    'Ownership':conn.Applicant.Ownership,
-                    'GovtID_Type':conn.Applicant.GovtID_Type,
-                    'ID_Number':conn.Applicant.ID_Number,
-                    'Category':conn.Applicant.Category,
-                },
-                'Reviewer_ID':conn.Reviewer_ID,
-                'Reviewer_Name':conn.Reviewer_Name,
-                'Reviewer_Comments':conn.Reviewer_Comments,
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
+    def render_to_response(self, context, **response_kwargs):
+        page_obj = context.get('page_obj')
+        paginator = context.get('paginator')
+
+        if not page_obj or not paginator:
+            queryset = context.get('connection', self.get_queryset())
+            page_obj = queryset
+            total_pages = 1
+            current_page_number = 1
+            total_items = len(queryset)
+            per_page = len(queryset)
+            object_list = queryset
+        else:
+            object_list = page_obj.object_list
+            total_pages = paginator.num_pages
+            current_page_number = page_obj.number
+            total_items = paginator.count
+            per_page = self.paginate_by
+
+        def serialize_conn(conn: Connection):
+            fmt = lambda d: d.isoformat() if d else None
+            return {
+                'id': conn.id,
+                'Load_Applied': conn.Load_Applied,
+                'Date_of_Application': fmt(conn.Date_of_Application),
+                'Date_of_Approval': fmt(getattr(conn, 'Date_of_Approval', None)),
+                'Modified_Date': fmt(getattr(conn, 'Modified_Date', None)),
+                'Status': conn.Status.Status_Name if conn.Status else None,
+                'Applicant': {
+                    'Applicant_Name': conn.Applicant.Applicant_Name,
+                    'Gender': conn.Applicant.Gender,
+                    'District': conn.Applicant.District,
+                    'State': conn.Applicant.State,
+                    'Pincode': conn.Applicant.Pincode,
+                    'Ownership': conn.Applicant.Ownership,
+                    'GovtID_Type': conn.Applicant.GovtID_Type,
+                    'ID_Number': conn.Applicant.ID_Number,
+                    'Category': conn.Applicant.Category,
+                },
+                'Reviewer_ID': getattr(conn, 'Reviewer_ID', None),
+                'Reviewer_Name': getattr(conn, 'Reviewer_Name', None),
+                'Reviewer_Comments': getattr(conn, 'Reviewer_Comments', None),
             }
 
-            for conn in context['connection']
-        ]
+        serialized_data = [serialize_conn(conn) for conn in object_list]
 
-
-        paginator=Paginator(serialized_data,self.paginate_by)
-        page_number=self.request.GET.get('page')
-        page_obj=paginator.get_page(page_number)
-
-        response_data={
-            'data':page_obj.object_list,
-            'search_query':context['search_query'],
-            'total_pages':24,
-            'current_pages':page_obj.number
+        response_data = {
+            'data': serialized_data,  # ✅ Fixed: serialize_conn output, not page_obj.object_list
+            'search_query': context.get('search_query'),
+            'total_pages': total_pages,
+            'current_page': current_page_number,
+            'total_items': total_items,
+            'per_page': per_page,
         }
 
-        return JsonResponse(response_data)
-    
+        return JsonResponse(response_data, safe=False)
+
+
+
 @csrf_exempt
 def update_applicant(request, id):
     if request.method == 'GET':
@@ -196,10 +220,10 @@ def update_applicant(request, id):
 
             connection_data = {
                 "Load_Applied": connection.Load_Applied,
-                "Date_of_Application": connection.Date_of_Application,
-                "Date_of_Approval": connection.Date_of_Approval,
-                "Modified_Date": connection.Modified_Date,
-                "Status": connection.Status.Status_Name,
+                "Date_of_Application": connection.Date_of_Application.isoformat() if connection.Date_of_Application else None,
+                "Date_of_Approval": connection.Date_of_Approval.isoformat() if connection.Date_of_Approval else None,
+                "Modified_Date": connection.Modified_Date.isoformat() if connection.Modified_Date else None,
+                "Status": connection.Status.Status_Name if connection.Status else None,
                 "Reviewer_ID": connection.Reviewer_ID,
                 "Reviewer_Name": connection.Reviewer_Name,
                 "Reviewer_Comments": connection.Reviewer_Comments
@@ -224,12 +248,13 @@ def update_applicant(request, id):
             if status_instance:
                 applicant_data = data.get('applicant', {})
                 for key, value in applicant_data.items():
-                    setattr(applicant, key, value)
+                    if hasattr(applicant, key):
+                        setattr(applicant, key, value)
                 applicant.save()
 
                 connection_data = data.get('connection', {})
                 for key, value in connection_data.items():
-                    if key != 'Status':
+                    if key != 'Status' and hasattr(connection, key):
                         setattr(connection, key, value)
 
                 connection.Status = status_instance
@@ -244,43 +269,45 @@ def update_applicant(request, id):
         except Connection.DoesNotExist:
             return JsonResponse({'error': 'Connection not found'}, status=404)
 
-        
 
 def connectionvisualization(request):
-    connection_requests = Connection.objects.all().values('Date_of_Application__year','Date_of_Application__month').annotate(total_requests=Count('id'))
+    connection_requests = Connection.objects.all().values('Date_of_Application__year', 'Date_of_Application__month').annotate(total_requests=Count('id'))
 
-    labels=[f"{x['Date_of_Application__year']}-{x['Date_of_Application__month']}" for x in connection_requests]
-    total_requests=[x['total_requests'] for x in connection_requests] 
+    labels = [f"{x['Date_of_Application__year']}-{x['Date_of_Application__month']}" for x in connection_requests]
+    total_requests = [x['total_requests'] for x in connection_requests]
 
-    context={
-        'labels':labels,
-        'total_requests':total_requests,
-    }   
+    context = {
+        'labels': labels,
+        'total_requests': total_requests,
+    }
 
-    return render(request, 'connectionvisualization.html',context)
+    return render(request, 'connectionvisualization.html', context)
+
 
 def connectionrequestdata(request):
-    selected_status=request.GET.get('status')
+    selected_status = request.GET.get('status')
     if selected_status:
-        filtered_connections=Connection.objects.filter(Status__Status_Name=selected_status)    
+        filtered_connections = Connection.objects.filter(Status__Status_Name=selected_status)
     else:
-        filtered_connections=Connection.objects.all()
+        filtered_connections = Connection.objects.all()
 
-    data=filtered_connections.annotate(month=TruncMonth('Date_of_Application')).values('month').annotate(total_request=Count('id'))
+    data = filtered_connections.annotate(month=TruncMonth('Date_of_Application')).values('month').annotate(total_request=Count('id'))
     print("DEBUG DATA:", list(data))
-    labels=[entry['month'].strftime('%B %Y')for entry in data]
-    total_requests=[entry['total_request'] for entry in data]
+    labels = [entry['month'].strftime('%B %Y') for entry in data]
+    total_requests = [entry['total_request'] for entry in data]
 
-    return JsonResponse({'labels':labels,'total_requests':total_requests})    
+    return JsonResponse({'labels': labels, 'total_requests': total_requests})
+
 
 # ✅ View all applicants (Admin only)
-@api_view(['GET','PATCH'])
+@api_view(['GET', 'PATCH'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAdminUser])
 def admin_applicant_list(request):
     applicants = Applicant.objects.all()
     serializer = ApplicantSerializer(applicants, many=True)
     return Response(serializer.data)
+
 
 # ✅ Delete applicant (Admin only)
 @api_view(['DELETE'])

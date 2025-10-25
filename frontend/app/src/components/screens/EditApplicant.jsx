@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { Row, Col, Container, Form, Button } from 'react-bootstrap';
+import { Row, Col, Container, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import API_URL from "../../config";   // ✅ import API_URL
+import API_URL from "../../config";
 
 function EditApplicant() {
   const { id } = useParams();
@@ -32,17 +32,22 @@ function EditApplicant() {
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ loader state
 
   const fetchApplicantData = async () => {
+    setLoading(true);
     try {
-      // ✅ API_URL used here
       const response = await fetch(`${API_URL}/api/update_applicant/${id}/`);
       const data = await response.json();
-      console.log("Fetched Data:", data);
       setApplicantData(data.applicant);
       setConnectionData(data.connection);
     } catch (error) {
       console.error("Error fetching applicant data:", error);
+      setMessage("❌ Failed to load applicant data.");
+      setMessageType("error");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,24 +69,19 @@ function EditApplicant() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
       if (connectiondata.Load_Applied > 200) {
         setMessage("⚠️ Load Applied cannot be greater than 200");
         setMessageType("error");
-        setTimeout(() => {
-          setMessage("");
-          setMessageType("");
-        }, 2000);
+        setTimeout(() => setMessage(""), 3000);
+        setLoading(false);
         return;
       }
 
-      // ✅ API_URL used here
       const response = await fetch(`${API_URL}/api/update_applicant/${id}/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applicant: applicantdata,
           connection: connectiondata
@@ -93,35 +93,55 @@ function EditApplicant() {
       if (response.ok) {
         setMessage("✅ Applicant Updated Successfully.");
         setMessageType("success");
-
         setTimeout(() => {
+          setMessage("");
           navigate("/");
         }, 1500);
       } else {
         setMessage(result.error || "❌ Failed to update applicant.");
         setMessageType("error");
+        setTimeout(() => setMessage(""), 3000);
       }
     } catch (error) {
       console.error("Error updating applicant data", error);
       setMessage("❌ Error while updating. Try again.");
       setMessageType("error");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <Container>
-        <div className="row">
-          <div className="col-md-3">
-            <Link to="/" className='btn btn-dark my-1'>
-              Go Back
-            </Link>
-          </div>
+    <Container>
+      <div className="row">
+        <div className="col-md-3">
+          <Link to="/" className='btn btn-dark my-1'>
+            Go Back
+          </Link>
         </div>
-        <hr />
-        <h3>Edit Applicants or Connection Details</h3>
-        <hr />
+      </div>
+      <hr />
+      <h3>Edit Applicants or Connection Details</h3>
+      <hr />
 
+      {loading && (
+        <div className="text-center my-3">
+          <Spinner animation="border" role="status" />
+          <p className="mt-2">Processing...</p>
+        </div>
+      )}
+
+      {message && (
+        <Alert
+          variant={messageType === "success" ? "success" : "danger"}
+          className="text-center"
+        >
+          {message}
+        </Alert>
+      )}
+
+      {!loading && (
         <Form onSubmit={handleSubmit}>
           <Row>
             {/* -------- Left Column -------- */}
@@ -342,20 +362,13 @@ function EditApplicant() {
             </Col>
           </Row>
 
-          <br />
-          {message && (
-            <p style={{ color: messageType === "success" ? "green" : "red" }}>
-              {message}
-            </p>
-          )}
-
           <Button variant='primary' className='mt-3 text-center' type='submit'>
             UPDATE
           </Button>
           <br /><br /><br />
         </Form>
-      </Container>
-    </>
+      )}
+    </Container>
   );
 }
 

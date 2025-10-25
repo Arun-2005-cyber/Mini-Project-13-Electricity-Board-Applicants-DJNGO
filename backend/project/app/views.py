@@ -137,6 +137,7 @@ class ConnectionListView(ListView):
         if start_date and end_date:
             queryset = queryset.filter(Date_of_Application__range=[start_date, end_date])
 
+        queryset = queryset.order_by('id')
         return queryset
 
 

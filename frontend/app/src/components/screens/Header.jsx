@@ -39,7 +39,7 @@ function Header() {
                       className="btn btn-light btn-sm ms-2"
                       onClick={() => {
                         localStorage.removeItem("user");
-                        window.location.href = "/login";
+                        window.location.href ="/login";
                       }}
                     >
                       Logout

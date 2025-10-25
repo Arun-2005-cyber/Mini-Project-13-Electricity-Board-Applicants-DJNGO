@@ -113,7 +113,7 @@ class ConnectionListView(ListView):
     model = Connection
     context_object_name = 'connection'
     paginate_by = 50
-    ordering = ['Date_of_Application', 'id']  # ✅ sort oldest first
+    ordering = ['id']
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('Applicant', 'Status').order_by(*self.ordering)

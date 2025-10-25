@@ -76,14 +76,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # Database
-# SQLite locally, Postgres on Render
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        env="DATABASE_URL",   # will read from Render environment variable
         conn_max_age=600,
-        ssl_require=False,  # Set to True if using Postgres on Render
+        ssl_require=True,     # Neon requires SSL
     )
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

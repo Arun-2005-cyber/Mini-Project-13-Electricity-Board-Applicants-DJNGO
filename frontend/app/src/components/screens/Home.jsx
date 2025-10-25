@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Row, Col, Alert, Spinner, Button } from 'react-bootstrap';
 import './Home.css';
 import Datepicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -16,9 +16,9 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-
   const location = useLocation();
 
+  // ✅ Show success message temporarily
   useEffect(() => {
     if (location.state?.successMsg) {
       setSuccessMsg(location.state.successMsg);
@@ -27,18 +27,23 @@ function Home() {
     }
   }, [location.state]);
 
+  // ✅ Fetch data with debounce for search
   useEffect(() => {
-    fetchData();
+    const delayDebounce = setTimeout(() => {
+      fetchData(searchQuery.trim() !== ""); // Disable loader for live search
+    }, 400);
+    return () => clearTimeout(delayDebounce);
   }, [currentPage, startDate, endDate, searchQuery]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isSearch = false) => {
+    if (!isSearch) setLoading(true);
     try {
       let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
-      if (startDate && endDate) {
+      if (startDate && endDate)
         url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
-      }
-      if (searchQuery) url += `&search=${searchQuery}`;
+      if (searchQuery)
+        url += `&search=${searchQuery}`;
+      
       const response = await fetch(url);
       const jsonData = await response.json();
 
@@ -51,6 +56,11 @@ function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Pagination buttons
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) setCurrentPage(page);
   };
 
   return (
@@ -111,36 +121,58 @@ function Home() {
                 </tr>
               </thead>
               <tbody>
-                {data.map((connection) => (
-                  <tr key={connection.id}>
-                    <td>{connection.id}</td>
-                    <td>{connection.Applicant.Applicant_Name}</td>
-                    <td>{connection.Applicant.Gender}</td>
-                    <td>{connection.Applicant.District}</td>
-                    <td>{connection.Applicant.State}</td>
-                    <td>{connection.Applicant.Pincode}</td>
-                    <td>{connection.Applicant.Ownership}</td>
-                    <td>{connection.Applicant.GovtID_Type}</td>
-                    <td>{connection.Applicant.ID_Number}</td>
-                    <td>{connection.Applicant.Category}</td>
-                    <td>{connection.Load_Applied}</td>
-                    <td>{connection.Date_of_Application}</td>
-                    <td>{connection.Status}</td>
-                    <td>{connection.Reviewer_ID}</td>
-                    <td>{connection.Reviewer_Name}</td>
-                    <td>{connection.Reviewer_Comments}</td>
-                    <td className="text-center">
-                      <Link
-                        className="btn btn-outline-primary w-100"
-                        to={`/EditApplicant/${connection.id}`}
-                      >
-                        <i className="fa-solid fa-pen-to-square me-1"></i> Edit
-                      </Link>
-                    </td>
+                {data.length > 0 ? (
+                  data.map((connection) => (
+                    <tr key={connection.id}>
+                      <td>{connection.id}</td>
+                      <td>{connection.Applicant.Applicant_Name}</td>
+                      <td>{connection.Applicant.Gender}</td>
+                      <td>{connection.Applicant.District}</td>
+                      <td>{connection.Applicant.State}</td>
+                      <td>{connection.Applicant.Pincode}</td>
+                      <td>{connection.Applicant.Ownership}</td>
+                      <td>{connection.Applicant.GovtID_Type}</td>
+                      <td>{connection.Applicant.ID_Number}</td>
+                      <td>{connection.Applicant.Category}</td>
+                      <td>{connection.Load_Applied}</td>
+                      <td>{connection.Date_of_Application}</td>
+                      <td>{connection.Status}</td>
+                      <td>{connection.Reviewer_ID}</td>
+                      <td>{connection.Reviewer_Name}</td>
+                      <td>{connection.Reviewer_Comments}</td>
+                      <td className="text-center">
+                        <Link className="btn btn-outline-primary w-100" to={`/EditApplicant/${connection.id}`}>
+                          <i className="fa-solid fa-pen-to-square me-1"></i> Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="17" className="text-center text-muted">No records found</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
+          </div>
+
+          {/* ✅ Pagination controls */}
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <Button
+              variant="outline-secondary"
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              ← Previous
+            </Button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <Button
+              variant="outline-secondary"
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Next →
+            </Button>
           </div>
         </>
       )}

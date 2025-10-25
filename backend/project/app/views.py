@@ -109,7 +109,7 @@ class ConnectionListView(ListView):
     model = Connection
     context_object_name = 'connection'
     paginate_by = 50
-    ordering = ['id']  # change to ['-id'] for newest first
+    ordering = ['Date_of_Application', 'id']  # ✅ sort oldest first
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('Applicant', 'Status').order_by(*self.ordering)
@@ -131,9 +131,11 @@ class ConnectionListView(ListView):
 
         # Apply date filters
         if start_date and end_date:
-            queryset = queryset.filter(Date_of_Application__gte=start_date, Date_of_Application__lte=end_date)
+            queryset = queryset.filter(Date_of_Application__range=[start_date, end_date])
 
         return queryset
+
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -284,19 +286,55 @@ def connectionvisualization(request):
     return render(request, 'connectionvisualization.html', context)
 
 
+from urllib.parse import unquote_plus
+from django.http import JsonResponse
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+
 def connectionrequestdata(request):
-    selected_status = request.GET.get('status')
-    if selected_status:
-        filtered_connections = Connection.objects.filter(Status__Status_Name=selected_status)
+    """
+    API: /api/connectionrequestdata/?status=<status>
+    - Accepts URL-encoded status (e.g. "Connection%20Released")
+    - If status is missing or equals "all", returns data for all statuses
+    - Returns JSON: { labels: [...], total_requests: [...] }
+    """
+    # decode URL-encoded value (handles spaces and +)
+    raw_status = request.GET.get('status', '') or ''
+    selected_status = unquote_plus(raw_status).strip()
+
+    # debug logging (optional; remove in production)
+    print("connectionrequestdata - selected_status:", repr(selected_status))
+
+    # use case-insensitive exact match; treat empty/"all" as no-filter
+    if selected_status and selected_status.lower() != "all":
+        filtered_connections = Connection.objects.filter(Status__Status_Name__iexact=selected_status)
     else:
         filtered_connections = Connection.objects.all()
 
-    data = filtered_connections.annotate(month=TruncMonth('Date_of_Application')).values('month').annotate(total_request=Count('id'))
-    print("DEBUG DATA:", list(data))
-    labels = [entry['month'].strftime('%B %Y') for entry in data]
-    total_requests = [entry['total_request'] for entry in data]
+    # Group by month and order by month (ascending)
+    data_qs = (
+        filtered_connections
+        .annotate(month=TruncMonth('Date_of_Application'))
+        .values('month')
+        .annotate(total_request=Count('id'))
+        .order_by('month')
+    )
 
-    return JsonResponse({'labels': labels, 'total_requests': total_requests})
+    # Prepare lists; ignore entries where month is None
+    labels = []
+    total_requests = []
+    for entry in data_qs:
+        m = entry.get('month')
+        if m:
+            labels.append(m.strftime('%B %Y'))
+            total_requests.append(entry.get('total_request', 0))
+
+    # Return an explicit, always-consistent JSON shape
+    return JsonResponse({
+        'labels': labels,
+        'total_requests': total_requests
+    })
+
 
 
 # ✅ View all applicants (Admin only)

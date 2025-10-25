@@ -30,13 +30,13 @@ function Header() {
               {localStorage.getItem("user") ? (
                 <>
                   <li className="nav-item">
-                    <span className="nav-link text-warning">
+                    <span className="nav-link text-white">
                       Hello, {JSON.parse(localStorage.getItem("user")).username}
                     </span>
                   </li>
                   <li className="nav-item">
                     <button
-                      className="btn btn-danger btn-sm ms-2"
+                      className="btn btn-light btn-sm ms-2"
                       onClick={() => {
                         localStorage.removeItem("user");
                         window.location.href = "/login";

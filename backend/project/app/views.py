@@ -32,49 +32,74 @@ def uploaddata(request):
         filepath = 'Electricity_board_connection_case_study.csv'
         df = pd.read_csv(filepath, encoding='latin-1')
 
-        for index, row in df.iterrows():
-            applicant, _ = Applicant.objects.get_or_create(
-                Applicant_Name=row['Applicant_Name'],
-                Gender=row['Gender'],
-                District=row['District'],
-                State=row['State'],
-                Pincode=row['Pincode'],
-                Ownership=row['Ownership'],
-                GovtID_Type=row['GovtID_Type'],
-                ID_Number=row['ID_Number'],
-                Category=row['Category']
-            )
+        CHUNK_SIZE = 50
+        total_rows = len(df)
+        print(f"Uploading {total_rows} rows in chunks of {CHUNK_SIZE}...")
 
-            status, _ = Status.objects.get_or_create(Status_Name=row['Status'])
+        for start in range(0, total_rows, CHUNK_SIZE):
+            sub_df = df.iloc[start:start + CHUNK_SIZE]
 
-            # Fixed date format to match '5/29/2025'
-            Date_of_Application = datetime.strptime(row['Date_of_Application'], "%m/%d/%Y")
+            for index, row in sub_df.iterrows():
+                applicant = Applicant.objects.filter(
+                    Applicant_Name=row['Applicant_Name'],
+                    Gender=row['Gender'],
+                    District=row['District'],
+                    State=row['State'],
+                    Pincode=row['Pincode'],
+                    Ownership=row['Ownership'],
+                    GovtID_Type=row['GovtID_Type'],
+                    ID_Number=row['ID_Number'],
+                    Category=row['Category']
+                ).first()
 
-            if not pd.isna(row['Date_of_Approval']):
-                Date_of_Approval = datetime.strptime(row['Date_of_Approval'], "%m/%d/%Y")
-            else:
+                if not applicant:
+                    applicant = Applicant.objects.create(
+                        Applicant_Name=row['Applicant_Name'],
+                        Gender=row['Gender'],
+                        District=row['District'],
+                        State=row['State'],
+                        Pincode=row['Pincode'],
+                        Ownership=row['Ownership'],
+                        GovtID_Type=row['GovtID_Type'],
+                        ID_Number=row['ID_Number'],
+                        Category=row['Category']
+                    )
+
+                status, _ = Status.objects.get_or_create(Status_Name=row['Status'])
+
+                Date_of_Application = datetime.strptime(row['Date_of_Application'], "%m/%d/%Y")
                 Date_of_Approval = None
+                if not pd.isna(row['Date_of_Approval']):
+                    try:
+                        Date_of_Approval = datetime.strptime(row['Date_of_Approval'], "%m/%d/%Y")
+                    except:
+                        pass
+                Modified_Date = datetime.strptime(row['Modified_Date'], "%m/%d/%Y")
 
-            Modified_Date = datetime.strptime(row['Modified_Date'], "%m/%d/%Y")
+                Connection.objects.update_or_create(
+                    Applicant=applicant,
+                    Load_Applied=row['Load_Applied'],
+                    Date_of_Application=Date_of_Application,
+                    defaults={
+                        'Date_of_Approval': Date_of_Approval,
+                        'Modified_Date': Modified_Date,
+                        'Status': status,
+                        'Reviewer_ID': row['Reviewer_ID'],
+                        'Reviewer_Name': row['Reviewer_Name'],
+                        'Reviewer_Comments': row['Reviewer_Comments']
+                    }
+                )
 
-            Connection.objects.get_or_create(
-                Applicant=applicant,
-                Load_Applied=row['Load_Applied'],
-                Date_of_Application=Date_of_Application,
-                Date_of_Approval=Date_of_Approval,
-                Modified_Date=Modified_Date,
-                Status=status,
-                Reviewer_ID=row['Reviewer_ID'],
-                Reviewer_Name=row['Reviewer_Name'],
-                Reviewer_Comments=row['Reviewer_Comments']
-            )
+                print(f"Processed ID: {row['ID']}")
 
-            print(f"Uploaded ID: {row['ID']}")
+            # Commit every chunk
+            from django.db import connection
+            connection.close()
+
+        return HttpResponse("File data uploaded successfully in chunks.")
 
     except Exception as e:
         return HttpResponse(f"File data is not uploaded or not updated: {e}")
-
-    return HttpResponse("File data is uploaded or updated successfully")
 
 
 class ConnectionListView(ListView):

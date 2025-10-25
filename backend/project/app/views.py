@@ -18,7 +18,11 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from .serializers import ApplicantSerializer
 from rest_framework.authentication import TokenAuthentication
-
+from urllib.parse import unquote_plus
+from django.http import JsonResponse
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+from .models import Connection 
 
 # Create your views here.
 def index(request):
@@ -286,12 +290,51 @@ def connectionvisualization(request):
     return render(request, 'connectionvisualization.html', context)
 
 
-from urllib.parse import unquote_plus
-from django.http import JsonResponse
-from django.db.models import Count
-from django.db.models.functions import TruncMonth
-
 def connectionrequestdata(request):
+    """
+    API: /api/connectionrequestdata/?status=<status>
+    - Accepts URL-encoded status (e.g. "Connection%20Released")
+    - If status is missing or equals "all", returns data for all statuses
+    - Returns JSON: { labels: [...], total_requests: [...] }
+    """
+
+    # decode and normalize status
+    raw_status = request.GET.get('status', '') or ''
+    selected_status = unquote_plus(raw_status).strip()
+    print("DEBUG STATUS PARAM:", repr(selected_status))
+
+    # filter connections based on status
+    if selected_status and selected_status.lower() != "all":
+        filtered_connections = Connection.objects.filter(Status__Status_Name__iexact=selected_status)
+    else:
+        filtered_connections = Connection.objects.all()
+
+    # aggregate by month
+    data_qs = (
+        filtered_connections
+        .annotate(month=TruncMonth('Date_of_Application'))
+        .values('month')
+        .annotate(total_request=Count('id'))
+        .order_by('month')
+    )
+
+    labels = []
+    total_requests = []
+    for entry in data_qs:
+        month = entry.get('month')
+        if month:
+            labels.append(month.strftime('%B %Y'))
+            total_requests.append(entry.get('total_request', 0))
+
+    # debug logs (safe now)
+    print("DEBUG CONNECTIONS COUNT:", filtered_connections.count())
+    print("DEBUG LABELS:", labels)
+    print("DEBUG TOTAL_REQUESTS:", total_requests)
+
+    return JsonResponse({
+        'labels': labels,
+        'total_requests': total_requests
+    })
 
     
     print("DEBUG CONNECTIONS COUNT:", filtered_connections.count())

@@ -292,6 +292,12 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth
 
 def connectionrequestdata(request):
+
+    
+    print("DEBUG CONNECTIONS COUNT:", filtered_connections.count())
+    print("DEBUG LABELS:", labels)
+    print("DEBUG TOTAL_REQUESTS:", total_requests)
+
     """
     API: /api/connectionrequestdata/?status=<status>
     - Accepts URL-encoded status (e.g. "Connection%20Released")
@@ -301,7 +307,7 @@ def connectionrequestdata(request):
     # decode URL-encoded value (handles spaces and +)
     raw_status = request.GET.get('status', '') or ''
     selected_status = unquote_plus(raw_status).strip()
-
+    print("DEBUG STATUS PARAM:", selected_status)
     # debug logging (optional; remove in production)
     print("connectionrequestdata - selected_status:", repr(selected_status))
 

@@ -4,6 +4,7 @@ import axios from "axios";
 import API_URL from "../../config";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../../Context/AuthContext";  // ✅ Import auth context
 
 function SignupScreen() {
   const [username, setUsername] = useState("");
@@ -17,6 +18,7 @@ function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();  // ✅ from context
 
   useEffect(() => {
     if (msg) {
@@ -43,6 +45,8 @@ function SignupScreen() {
 
     try {
       setLoading(true);
+
+      // ✅ Step 1: Register the user
       const res = await axios.post(`${API_URL}/api/signup/`, {
         username,
         email,
@@ -50,9 +54,19 @@ function SignupScreen() {
       });
 
       if (res.data.status === "success") {
+        // ✅ Step 2: Auto-login right after successful signup
+        const loginRes = await axios.post(`${API_URL}/api/login/`, {
+          username,
+          password,
+        });
+
+        // ✅ Step 3: Save token + user in Auth Context
+        login(loginRes.data.token, { username });
+
+        // ✅ Step 4: Show success and redirect
         setMsgVariant("success");
-        setMsg("✅ Account created successfully! Redirecting...");
-        setTimeout(() => navigate("/login"), 1500);
+        setMsg("✅ Account created! Logging you in...");
+        setTimeout(() => navigate("/", { replace: true }), 1500);
       } else {
         setMsgVariant("danger");
         setMsg("❌ " + (res.data.message || "Signup failed."));

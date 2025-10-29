@@ -49,7 +49,8 @@ function Home() {
       if (searchQuery)
         url += `&search=${searchQuery}`;
 
-      const token = localStorage.getItem("token");
+      
+       const token = localStorage.getItem("token");
       const response = await fetch(url, {
         headers: {
           "Authorization": token ? `Token ${token}` : undefined,
@@ -240,7 +241,7 @@ function Home() {
                       <td className="text-center">
                         <Link
                           className="btn btn-outline-primary w-100"
-                          to={`/EditApplicant/${connection.id}`}
+                          to={`/EditApplicant/${connection.Applicant.id}`}
                         >
                           <i className="fa-solid fa-pen-to-square me-1"></i> Edit
                         </Link>

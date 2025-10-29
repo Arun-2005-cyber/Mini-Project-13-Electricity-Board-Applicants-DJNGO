@@ -241,7 +241,7 @@ function Home() {
                       <td className="text-center">
                         <Link
                           className="btn btn-outline-primary w-100"
-                          to={`/EditApplicant/${connection.Applicant.id}`}
+                          to={`/EditApplicant/${connection.id}`}
                         >
                           <i className="fa-solid fa-pen-to-square me-1"></i> Edit
                         </Link>

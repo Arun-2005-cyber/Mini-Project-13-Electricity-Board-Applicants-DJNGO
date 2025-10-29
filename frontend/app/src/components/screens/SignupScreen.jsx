@@ -61,7 +61,7 @@ function SignupScreen() {
         });
 
         // ✅ Step 3: Save token + user in Auth Context
-        login(loginRes.data.token, { username });
+        login({ username }, loginRes.data.token);
 
         // ✅ Step 4: Show success and redirect
         setMsgVariant("success");

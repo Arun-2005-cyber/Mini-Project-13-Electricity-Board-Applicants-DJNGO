@@ -1,7 +1,7 @@
-import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../Context/AuthContext';
+import React from "react";
+import { LinkContainer } from "react-router-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 
 function Header() {
   const { user, logout } = useAuth();
@@ -9,7 +9,7 @@ function Header() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -24,9 +24,6 @@ function Header() {
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarColor01"
-          aria-controls="navbarColor01"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>

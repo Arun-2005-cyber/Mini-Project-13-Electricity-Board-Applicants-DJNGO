@@ -4,6 +4,7 @@ import axios from "axios";
 import API_URL from "../../config";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../../Context/AuthContext";
 
 function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -12,15 +13,15 @@ function LoginScreen() {
   const [msgVariant, setMsgVariant] = useState("info");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // If already logged in, redirect to home
+  // Redirect if logged in
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) navigate("/");
-  }, [navigate]);
+    if (isAuthenticated) navigate("/");
+  }, [isAuthenticated, navigate]);
 
-  // Auto hide messages
+  // Clear message automatically
   useEffect(() => {
     if (msg) {
       const timer = setTimeout(() => setMsg(""), 3000);
@@ -38,13 +39,14 @@ function LoginScreen() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${API_URL}/api/login/`, {
-        username,
-        password,
-      });
+      const res = await axios.post(`${API_URL}/api/login/`, { username, password });
 
-      if (res.data.status === "success") {
-        localStorage.setItem("user", JSON.stringify(res.data));
+      // Adjust according to Django API
+      const token = res.data?.token || res.data?.access || null;
+      const userData = res.data?.user || res.data;
+
+      if (token && userData) {
+        login(userData, token);
         setMsgVariant("success");
         setMsg("✅ Login successful! Redirecting...");
         setTimeout(() => navigate("/"), 1000);
@@ -55,9 +57,7 @@ function LoginScreen() {
     } catch (err) {
       console.error("Login error:", err);
       setMsgVariant("danger");
-      setMsg(
-        "❌ " + (err.response?.data?.message || "Server connection failed.")
-      );
+      setMsg("❌ " + (err.response?.data?.detail || "Server connection failed."));
     } finally {
       setLoading(false);
     }
@@ -69,11 +69,7 @@ function LoginScreen() {
       <div className="col-6 card p-4 shadow-lg rounded-4">
         <h2 className="text-center mb-3">Login</h2>
 
-        {msg && (
-          <Alert variant={msgVariant} className="text-center py-2">
-            {msg}
-          </Alert>
-        )}
+        {msg && <Alert variant={msgVariant} className="text-center py-2">{msg}</Alert>}
 
         <Form onSubmit={handleLogin}>
           <Form.Group className="mb-3">
@@ -107,33 +103,13 @@ function LoginScreen() {
             </InputGroup>
           </Form.Group>
 
-          <Button
-            className="mt-3 w-100"
-            type="submit"
-            disabled={loading}
-            variant="primary"
-          >
-            {loading ? (
-              <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  className="me-2"
-                />
-                Logging in...
-              </>
-            ) : (
-              "Login"
-            )}
+          <Button className="mt-3 w-100" type="submit" disabled={loading}>
+            {loading ? <><Spinner as="span" animation="border" size="sm" className="me-2" /> Logging in...</> : "Login"}
           </Button>
         </Form>
 
         <div className="text-center mt-3">
-          Don’t have an account?{" "}
-          <Link to="/signup" style={{ color: "#007bff" }}>
-            Create one
-          </Link>
+          Don’t have an account? <Link to="/signup">Create one</Link>
         </div>
       </div>
       <div className="col-3"></div>

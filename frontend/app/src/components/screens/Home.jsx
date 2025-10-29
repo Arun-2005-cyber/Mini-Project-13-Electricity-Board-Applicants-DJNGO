@@ -49,7 +49,13 @@ function Home() {
       if (searchQuery)
         url += `&search=${searchQuery}`;
 
-      const response = await fetch(url);
+      const token = localStorage.getItem("token");
+      const response = await fetch(url, {
+        headers: {
+          "Authorization": token ? `Token ${token}` : undefined,
+        },
+      });
+
       if (!response.ok) throw new Error(`Server error ${response.status}`);
       const jsonData = await response.json();
 

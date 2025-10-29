@@ -1,22 +1,23 @@
-import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Home from './components/screens/Home.jsx';
-import Header from './components/screens/Header.jsx';
-import EditApplicant from './components/screens/EditApplicant.jsx';
-import Stats from './components/screens/Stats.jsx';
-import LoginScreen from './components/screens/LoginScreen.jsx';
-import SignupScreen from './components/screens/SignupScreen.jsx';
-import PrivateRoute from './components/PrivateRoute.jsx';
-import { AuthProvider } from './Context/AuthContext.jsx';
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Home from "./components/screens/Home.jsx";
+import Header from "./components/screens/Header.jsx";
+import EditApplicant from "./components/screens/EditApplicant.jsx";
+import Stats from "./components/screens/Stats.jsx";
+import LoginScreen from "./components/screens/LoginScreen.jsx";
+import SignupScreen from "./components/screens/SignupScreen.jsx";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./Context/AuthContext";
 
 function App() {
   return (
-    <AuthProvider>
       <BrowserRouter>
+    <AuthProvider>
+    
         <Header />
         <Routes>
           <Route
-            path='/'
+            path="/"
             element={
               <PrivateRoute>
                 <Home />
@@ -24,7 +25,7 @@ function App() {
             }
           />
           <Route
-            path='/EditApplicant/:id'
+            path="/EditApplicant/:id"
             element={
               <PrivateRoute>
                 <EditApplicant />
@@ -32,18 +33,19 @@ function App() {
             }
           />
           <Route
-            path='/statisticsCollection/'
+            path="/statisticsCollection/"
             element={
               <PrivateRoute>
                 <Stats />
               </PrivateRoute>
             }
           />
-          <Route path='/login/' element={<LoginScreen />} />
-          <Route path='/signup/' element={<SignupScreen />} />
+          <Route path="/login/" element={<LoginScreen />} />
+          <Route path="/signup/" element={<SignupScreen />} />
         </Routes>
+         </AuthProvider>
       </BrowserRouter>
-    </AuthProvider>
+   
   );
 }
 

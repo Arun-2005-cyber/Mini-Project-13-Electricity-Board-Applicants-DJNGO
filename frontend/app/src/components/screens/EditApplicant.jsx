@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Container, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import API_URL from "../../config";
 
 function EditApplicant() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [applicantdata, setApplicantData] = useState({
     Applicant_Name: "",
@@ -32,12 +32,37 @@ function EditApplicant() {
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ loader state
+  const [loading, setLoading] = useState(false);
 
+  // ✅ Protect route: user must be logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("⚠️ Please log in to edit applicant details.");
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // ✅ Fetch applicant data
   const fetchApplicantData = async () => {
+    if (!id) {
+      setMessage("Invalid applicant ID!");
+      setMessageType("error");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/update_applicant/${id}/`);
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_URL}/api/update_applicant/${id}/`, {
+        headers: {
+          "Authorization": token ? `Token ${token}` : "",
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       const data = await response.json();
       setApplicantData(data.applicant);
       setConnectionData(data.connection);
@@ -53,23 +78,29 @@ function EditApplicant() {
 
   useEffect(() => {
     fetchApplicantData();
-  }, []);
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (applicantdata.hasOwnProperty(name)) {
+    if (name in applicantdata) {
       setApplicantData({ ...applicantdata, [name]: value });
-    }
-    if (connectiondata.hasOwnProperty(name)) {
+    } else if (name in connectiondata) {
       setConnectionData({ ...connectiondata, [name]: value });
     }
   };
 
-  const navigate = useNavigate();
-
+  // ✅ Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("⚠️ Please login to continue.");
+      navigate("/login");
+      return;
+    }
+
     try {
       if (connectiondata.Load_Applied > 200) {
         setMessage("⚠️ Load Applied cannot be greater than 200");
@@ -81,7 +112,10 @@ function EditApplicant() {
 
       const response = await fetch(`${API_URL}/api/update_applicant/${id}/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Token ${token}`,
+        },
         body: JSON.stringify({
           applicant: applicantdata,
           connection: connectiondata
@@ -93,9 +127,12 @@ function EditApplicant() {
       if (response.ok) {
         setMessage("✅ Applicant Updated Successfully.");
         setMessageType("success");
+
+        // ✅ Navigate to dashboard and refresh
         setTimeout(() => {
           setMessage("");
-          navigate("/");
+          navigate("/", { replace: true });
+          window.location.reload();
         }, 1500);
       } else {
         setMessage(result.error || "❌ Failed to update applicant.");

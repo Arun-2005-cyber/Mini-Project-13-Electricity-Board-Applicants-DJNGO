@@ -6,21 +6,44 @@ import EditApplicant from './components/screens/EditApplicant.jsx';
 import Stats from './components/screens/Stats.jsx';
 import LoginScreen from './components/screens/LoginScreen.jsx';
 import SignupScreen from './components/screens/SignupScreen.jsx';
-
+import PrivateRoute from './components/PrivateRoute.jsx';
+import { AuthProvider } from './Context/AuthContext.jsx';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/EditApplicant/:id' element={<EditApplicant />} />
-        <Route path='/statisticsCollection/' element={<Stats/>} />
-        <Route path='/login/' element={<LoginScreen/>} />
-        <Route path='/signup/' element={<SignupScreen />} />
-
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Header />
+        <Routes>
+          <Route
+            path='/'
+            element={
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/EditApplicant/:id'
+            element={
+              <PrivateRoute>
+                <EditApplicant />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/statisticsCollection/'
+            element={
+              <PrivateRoute>
+                <Stats />
+              </PrivateRoute>
+            }
+          />
+          <Route path='/login/' element={<LoginScreen />} />
+          <Route path='/signup/' element={<SignupScreen />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

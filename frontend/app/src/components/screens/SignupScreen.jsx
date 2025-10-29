@@ -18,17 +18,6 @@ function SignupScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
-  const validateForm = () => {
-    return (
-      username.trim() &&
-      email.trim() &&
-      password.length >= 6 &&
-      confirmPassword === password &&
-      agree
-    );
-  };
-
-  // ✅ Auto-hide messages after 3 seconds
   useEffect(() => {
     if (msg) {
       const timer = setTimeout(() => setMsg(""), 3000);
@@ -36,12 +25,19 @@ function SignupScreen() {
     }
   }, [msg]);
 
+  const validateForm = () => {
+    if (!username.trim() || !email.trim()) return false;
+    if (password.length < 6) return false;
+    if (password !== confirmPassword) return false;
+    if (!agree) return false;
+    return true;
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       setMsgVariant("danger");
-      setMsg("❌ Please fill all fields correctly and accept the terms.");
+      setMsg("⚠️ Please fill all fields correctly.");
       return;
     }
 
@@ -55,27 +51,27 @@ function SignupScreen() {
 
       if (res.data.status === "success") {
         setMsgVariant("success");
-        setMsg("✅ Account created successfully!");
+        setMsg("✅ Account created successfully! Redirecting...");
         setTimeout(() => navigate("/login"), 1500);
       } else {
         setMsgVariant("danger");
         setMsg("❌ " + (res.data.message || "Signup failed."));
       }
     } catch (err) {
+      console.error("Signup error:", err);
       setMsgVariant("danger");
-      setMsg("❌ " + (err.response?.data?.message || "Server Error"));
+      setMsg("❌ " + (err.response?.data?.message || "Server error."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }} className="row mt-5">
+    <div className="row mt-5" style={{ padding: "20px" }}>
       <div className="col-3"></div>
       <div className="col-6 card p-4 shadow-lg rounded-4">
         <h2 className="text-center mb-3">Create Account</h2>
 
-        {/* ✅ Message Alert */}
         {msg && (
           <Alert variant={msgVariant} className="text-center py-2">
             {msg}
@@ -110,7 +106,7 @@ function SignupScreen() {
             <InputGroup>
               <Form.Control
                 type={showPassword ? "text" : "password"}
-                placeholder="Password (min 6 characters)"
+                placeholder="Password (min 6 chars)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -165,6 +161,7 @@ function SignupScreen() {
             className="mt-2 w-100"
             type="submit"
             disabled={!validateForm() || loading}
+            variant="primary"
           >
             {loading ? (
               <>
@@ -172,8 +169,6 @@ function SignupScreen() {
                   as="span"
                   animation="border"
                   size="sm"
-                  role="status"
-                  aria-hidden="true"
                   className="me-2"
                 />
                 Signing up...

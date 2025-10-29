@@ -14,7 +14,13 @@ function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // Auto-hide message after 3 seconds
+  // If already logged in, redirect to home
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) navigate("/");
+  }, [navigate]);
+
+  // Auto hide messages
   useEffect(() => {
     if (msg) {
       const timer = setTimeout(() => setMsg(""), 3000);
@@ -26,7 +32,7 @@ function LoginScreen() {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
       setMsgVariant("danger");
-      setMsg("❌ Please fill in all fields.");
+      setMsg("⚠️ Please fill in all fields.");
       return;
     }
 
@@ -40,27 +46,29 @@ function LoginScreen() {
       if (res.data.status === "success") {
         localStorage.setItem("user", JSON.stringify(res.data));
         setMsgVariant("success");
-        setMsg("✅ Login successful!");
+        setMsg("✅ Login successful! Redirecting...");
         setTimeout(() => navigate("/"), 1000);
       } else {
         setMsgVariant("danger");
-        setMsg("❌ Invalid credentials");
+        setMsg("❌ Invalid username or password.");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setMsgVariant("danger");
-      setMsg("❌ Login failed: " + (err.response?.data?.message || "Server Error"));
+      setMsg(
+        "❌ " + (err.response?.data?.message || "Server connection failed.")
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }} className="row mt-5">
+    <div className="row mt-5" style={{ padding: "20px" }}>
       <div className="col-3"></div>
       <div className="col-6 card p-4 shadow-lg rounded-4">
         <h2 className="text-center mb-3">Login</h2>
 
-        {/* Message Alert */}
         {msg && (
           <Alert variant={msgVariant} className="text-center py-2">
             {msg}
@@ -111,8 +119,6 @@ function LoginScreen() {
                   as="span"
                   animation="border"
                   size="sm"
-                  role="status"
-                  aria-hidden="true"
                   className="me-2"
                 />
                 Logging in...

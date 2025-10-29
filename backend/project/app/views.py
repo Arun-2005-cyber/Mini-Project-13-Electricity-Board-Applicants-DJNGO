@@ -210,8 +210,8 @@ class ConnectionListView(ListView):
 def update_applicant(request, id):
     if request.method == 'GET':
         try:
-            applicant = Applicant.objects.get(pk=id)
-            connection = Connection.objects.get(Applicant=applicant)
+            connection = Connection.objects.select_related('Applicant', 'Status').get(pk=id)
+            applicant = connection.Applicant
 
             applicant_data = {
                 "Applicant_Name": applicant.Applicant_Name,
@@ -245,8 +245,8 @@ def update_applicant(request, id):
 
     elif request.method == 'POST':
         try:
-            applicant = Applicant.objects.get(pk=id)
-            connection = Connection.objects.get(Applicant=applicant)
+            connection = Connection.objects.select_related('Applicant', 'Status').get(pk=id)
+            applicant = connection.Applicant
             data = json.loads(request.body)
 
             status_name = data.get('connection', {}).get('Status')

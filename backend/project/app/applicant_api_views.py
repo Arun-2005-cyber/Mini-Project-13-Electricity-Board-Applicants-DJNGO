@@ -38,9 +38,9 @@ class ApplicantCreateView(APIView):
             applicant = serializer.save()
 
             # Default status = Pending
-            default_status = Status.objects.get(Status_Name="Pending")
+            default_status, _ = Status.objects.get_or_create(Status_Name="Pending")
 
-            # Auto create connection
+            # Auto create connection entry
             Connection.objects.create(
                 Applicant=applicant,
                 Load_Applied=0,
@@ -51,9 +51,6 @@ class ApplicantCreateView(APIView):
                 Reviewer_Comments="Documents Verification in progress"
             )
 
-            return Response(
-                {"message": "Applicant & Connection created successfully"},
-                status=status.HTTP_201_CREATED
-            )
+            return Response({"message": "Applicant & Connection created successfully"}, status=201)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=400)

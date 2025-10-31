@@ -52,5 +52,5 @@ class ApplicantCreateView(APIView):
             )
 
             return Response({"message": "Applicant & Connection created successfully"}, status=201)
-
+        print("❌ Serializer Error:", serializer.errors)
         return Response(serializer.errors, status=400)

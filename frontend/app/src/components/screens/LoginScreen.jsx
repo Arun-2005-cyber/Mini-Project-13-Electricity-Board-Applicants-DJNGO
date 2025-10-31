@@ -43,7 +43,7 @@ function LoginScreen() {
 
       // Adjust according to Django API
       const token = res.data?.token || res.data?.access || null;
-      const userData = res.data?.user || res.data;
+      const userData = res.data?.user ?? null;
 
       if (token && userData) {
         login(userData, token);

@@ -35,12 +35,25 @@ function Header() {
                 <Link className="nav-link text-white">Home</Link>
               </LinkContainer>
             </li>
-            <li className="nav-item">
-              <LinkContainer to="/statisticsCollection">
-                <Link className="nav-link text-white">Dash Statistics</Link>
-              </LinkContainer>
-            </li>
 
+            {user && (
+              <>
+                <li className="nav-item">
+                  <LinkContainer to="/statisticsCollection">
+                    <Link className="nav-link text-white">Dash Statistics</Link>
+                  </LinkContainer>
+                </li>
+
+                <li className="nav-item">
+                  <LinkContainer to="/add-applicant">
+                    <Link className="nav-link text-white">Add Applicant</Link>
+                  </LinkContainer>
+                </li>
+              </>
+            )}
+          </ul>
+
+          <ul className="navbar-nav ms-auto">
             {user ? (
               <>
                 <li className="nav-item">
@@ -49,10 +62,7 @@ function Header() {
                   </span>
                 </li>
                 <li className="nav-item">
-                  <button
-                    className="btn btn-light btn-sm ms-2"
-                    onClick={handleLogout}
-                  >
+                  <button className="btn btn-light btn-sm ms-2" onClick={handleLogout}>
                     Logout
                   </button>
                 </li>
@@ -64,14 +74,11 @@ function Header() {
                     <Link className="nav-link text-white">Login</Link>
                   </LinkContainer>
                 </li>
+
                 <li className="nav-item">
                   <LinkContainer to="/signup">
                     <Link className="nav-link text-white">Signup</Link>
                   </LinkContainer>
-                </li>
-
-                <li className="nav-item">
-                  <Link className="nav-link" to="/add-applicant">Add Applicant</Link>
                 </li>
               </>
             )}

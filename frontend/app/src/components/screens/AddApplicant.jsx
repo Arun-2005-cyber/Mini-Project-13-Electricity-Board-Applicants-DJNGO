@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import axios from "axios";
 import API_URL from "../../config";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 
 function AddApplicant() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const { token } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -29,13 +30,24 @@ function AddApplicant() {
     e.preventDefault();
 
     try {
-      await axios.post(`${API_URL}/admin/applicants/`, form, {
-        headers: { Authorization: `Token ${token}` },
+      await axios.post(
+        `${API_URL}/api/applicants/`,
+        form,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      navigate("/", {
+        state: { successMsg: "✅ Applicant added successfully" },
       });
 
-      navigate("/", { state: { successMsg: "✅ Applicant added successfully" } });
     } catch (error) {
-      alert("Failed to add applicant");
+      console.error(error);
+      alert(error.response?.data?.detail || "Failed to add applicant");
     }
   };
 
@@ -46,7 +58,10 @@ function AddApplicant() {
 
         {Object.keys(form).map((key) => (
           <div className="mb-2" key={key}>
-            <label className="form-label">{key.replace("_", " ")}</label>
+            <label className="form-label">
+              {key.replace("_", " ").toUpperCase()}
+            </label>
+
             <input
               className="form-control"
               name={key}
@@ -57,7 +72,10 @@ function AddApplicant() {
           </div>
         ))}
 
-        <button className="btn btn-primary w-100">Add Applicant</button>
+        <button className="btn btn-primary w-100">
+          Add Applicant
+        </button>
+
       </form>
     </div>
   );

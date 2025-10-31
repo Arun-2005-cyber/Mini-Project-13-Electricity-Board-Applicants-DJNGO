@@ -5,7 +5,7 @@ from .views import ConnectionListView
 from .api_views import RegisterAPIView, CurrentUserAPIView
 from .applicant_api_views import (
     ApplicantListCreateAPIView,
-    ApplicantRetrieveUpdateDestroyAPIView
+    ApplicantRetrieveUpdateDestroyAPIView,ApplicantCreateView
 )
 from app.views_auth import signup, login_view, create_applicant, delete_applicant
 
@@ -21,8 +21,9 @@ urlpatterns = [
     path('connectionrequestdata/',views.connectionrequestdata,name='connectionrequestdata'),
 
     # new REST endpoints (DRF)
-    path('applicants/', ApplicantListCreateAPIView.as_view(), name='applicant-list'),
-    path('applicants/<int:pk>/', ApplicantRetrieveUpdateDestroyAPIView.as_view(), name='applicant-detail'),
+    path('applicant/', ApplicantListCreateAPIView.as_view(), name='applicant-list'),
+    path('applicant/<int:pk>/', ApplicantRetrieveUpdateDestroyAPIView.as_view(), name='applicant-detail'),
+    path('applicant/create/', ApplicantCreateView.as_view()),
 
     # optional older admin endpoints (if you still want them)
     path("admin/applicant/add/", create_applicant, name="create-applicant"),

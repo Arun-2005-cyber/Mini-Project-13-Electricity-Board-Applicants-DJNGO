@@ -42,7 +42,7 @@ function AddApplicant() {
   const submitApplicant = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/api/applicants/`, form, {
+      await axios.post(`${API_URL}/api/applicant/create/`, form, {
         headers: { Authorization: `Token ${token}` },
       });
 

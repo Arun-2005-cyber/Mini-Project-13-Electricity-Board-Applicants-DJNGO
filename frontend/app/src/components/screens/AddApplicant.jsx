@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import API_URL from "../../config";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 
-function EditApplicant() {
+function AddApplicant() {
   const navigate = useNavigate();
   const { token } = useAuth();
-  const { id } = useParams();
 
   const [form, setForm] = useState({
     Applicant_Name: "",
@@ -34,43 +33,30 @@ function EditApplicant() {
 
   const handleChange = (e) => {
     let { name, value } = e.target;
-
-    if (name === "Pincode") value = value.replace(/\D/g, "").slice(0, 6);
-
+    if (name === "Pincode") {
+      value = value.replace(/\D/g, "").slice(0, 6);
+    }
     setForm({ ...form, [name]: value });
   };
 
-  // ✅ Fetch existing data for that applicant
-  const getApplicant = async () => {
-    const res = await axios.get(`${API_URL}/api/applicants/${id}/`, {
-      headers: { Authorization: `Token ${token}` },
-    });
-    setForm(res.data);
-  };
-
-  useEffect(() => {
-    getApplicant();
-  }, []);
-
-  const updateApplicant = async (e) => {
+  const submitApplicant = async (e) => {
     e.preventDefault();
-
     try {
-      await axios.put(`${API_URL}/api/applicants/${id}/`, form, {
+      await axios.post(`${API_URL}/api/applicants/`, form, {
         headers: { Authorization: `Token ${token}` },
       });
 
-      alert("✅ Applicant updated successfully");
+      alert("✅ Applicant added successfully");
       navigate("/");
     } catch (error) {
-      alert(error.response?.data?.detail || "Update failed");
+      alert(error.response?.data?.detail || "Add failed");
     }
   };
 
   return (
     <div className="container mt-4">
-      <h3>Edit Applicant</h3>
-      <form onSubmit={updateApplicant} className="mt-3">
+      <h3>Add Applicant</h3>
+      <form onSubmit={submitApplicant} className="mt-3">
 
         <input className="form-control mb-2" name="Applicant_Name" placeholder="Name"
           value={form.Applicant_Name} onChange={handleChange} />
@@ -128,10 +114,10 @@ function EditApplicant() {
           ))}
         </select>
 
-        <button className="btn btn-success w-100">Update Applicant</button>
+        <button className="btn btn-success w-100">Add Applicant</button>
       </form>
     </div>
   );
 }
 
-export default EditApplicant;
+export default AddApplicant;

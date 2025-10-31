@@ -1,10 +1,10 @@
+# app/urls.py
 from django.urls import path
 from app import views
 from .views import ConnectionListView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .api_views import RegisterAPIView, CurrentUserAPIView
-from .applicant_api_views import ApplicantListAPIView, ApplicantDetailAPIView
-from app.views_auth import delete_applicant, signup, login_view,create_applicant
+from .applicant_api_views import ApplicantListCreateAPIView, ApplicantRetrieveUpdateDestroyAPIView
+from app.views_auth import signup, login_view, create_applicant, delete_applicant
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -16,11 +16,12 @@ urlpatterns = [
     path('update_applicant/<int:id>/', views.update_applicant, name='update_applicant'),
     path('connectionvisualization/',views.connectionvisualization,name='connectionvisualization'),
     path('connectionrequestdata/',views.connectionrequestdata,name='connectionrequestdata'),
-    path('applicants/', ApplicantListAPIView.as_view(), name='applicant-list'),
-    path('applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='applicant-detail'),
 
-    # path('login/',views.handlelogin,name='handlelogin')
+    # new REST endpoints (DRF)
+    path('applicants/', ApplicantListCreateAPIView.as_view(), name='applicant-list'),
+    path('applicants/<int:pk>/', ApplicantRetrieveUpdateDestroyAPIView.as_view(), name='applicant-detail'),
+
+    # optional older admin endpoints (if you still want them)
+    path("admin/applicant/add/", create_applicant, name="create-applicant"),
+    path("admin/applicant/delete/<int:id>/", delete_applicant, name="delete-applicant"),
 ]
-
-  
-

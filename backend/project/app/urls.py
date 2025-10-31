@@ -3,7 +3,10 @@ from django.urls import path
 from app import views
 from .views import ConnectionListView
 from .api_views import RegisterAPIView, CurrentUserAPIView
-from .applicant_api_views import ApplicantListCreateAPIView, ApplicantRetrieveUpdateDestroyAPIView
+from .applicant_api_views import (
+    ApplicantListCreateAPIView,
+    ApplicantRetrieveUpdateDestroyAPIView
+)
 from app.views_auth import signup, login_view, create_applicant, delete_applicant
 
 urlpatterns = [

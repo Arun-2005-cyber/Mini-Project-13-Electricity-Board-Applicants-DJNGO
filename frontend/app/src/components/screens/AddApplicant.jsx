@@ -1,32 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import API_URL from "../../config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 
-function AddApplicant() {
+function EditApplicant() {
   const navigate = useNavigate();
   const { token } = useAuth();
+  const { id } = useParams();
 
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    gender: "",
-    state: "",
-    district: "",
-    pincode: "",
-    ownership: "",
-    govtID_type: "",
-    id_number: "",
-    category: "",
-    load_applied: "",
-    dob: "",
-    application_date: "",
+    Applicant_Name: "",
+    Gender: "",
+    State: "",
+    District: "",
+    Pincode: "",
+    Ownership: "",
+    GovtID_Type: "",
+    ID_Number: "",
+    Category: "",
   });
-
-  const [errors, setErrors] = useState({});
-
-  const genders = ["Male", "Female", "Other"];
 
   const stateDistricts = {
     Telangana: ["Hyderabad", "Warangal", "Karimnagar", "Nizamabad"],
@@ -35,133 +28,110 @@ function AddApplicant() {
     "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
   };
 
-  const ownership = ["Owned", "Rented", "Government"];
-  const idTypes = ["Aadhar", "PAN", "Passport", "Driving License"];
-  const categories = ["Residential", "Commercial", "Industrial", "Agriculture"];
-
-  const validate = () => {
-    const temp = {};
-    if (!form.name) temp.name = "Name is required";
-    if (!form.email.includes("@")) temp.email = "Valid email required";
-    if (form.pincode.length !== 6) temp.pincode = "Pincode must be 6 digits";
-    if (!form.dob) temp.dob = "DOB required";
-    if (!form.application_date) temp.application_date = "Application date required";
-    setErrors(temp);
-    return Object.keys(temp).length === 0;
-  };
+  const ownershipOptions = ["INDIVIDUAL", "JOINT"];
+  const idTypes = ["AADHAR", "VOTER_ID", "PAN", "PASSPORT"];
+  const categories = ["Residential", "Commercial"];
 
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    if (name === "pincode") {
-      value = value.replace(/\D/g, "").slice(0, 6); // only digits, max 6
-    }
+    if (name === "Pincode") value = value.replace(/\D/g, "").slice(0, 6);
 
-    if (name === "state") {
-      setForm({ ...form, [name]: value, district: "" });
-    } else {
-      setForm({ ...form, [name]: value });
-    }
+    setForm({ ...form, [name]: value });
   };
 
-  const submitForm = async (e) => {
+  // ✅ Fetch existing data for that applicant
+  const getApplicant = async () => {
+    const res = await axios.get(`${API_URL}/api/applicants/${id}/`, {
+      headers: { Authorization: `Token ${token}` },
+    });
+    setForm(res.data);
+  };
+
+  useEffect(() => {
+    getApplicant();
+  }, []);
+
+  const updateApplicant = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
 
     try {
-      await axios.post(`${API_URL}/api/applicants/`, form, {
+      await axios.put(`${API_URL}/api/applicants/${id}/`, form, {
         headers: { Authorization: `Token ${token}` },
       });
 
-      navigate("/", { state: { successMsg: "✅ Applicant added successfully" } });
+      alert("✅ Applicant updated successfully");
+      navigate("/");
     } catch (error) {
-      alert(error.response?.data?.detail || "Failed to add applicant");
+      alert(error.response?.data?.detail || "Update failed");
     }
   };
 
   return (
     <div className="container mt-4">
-      <h3>Add New Applicant</h3>
-      <form onSubmit={submitForm} className="mt-3">
+      <h3>Edit Applicant</h3>
+      <form onSubmit={updateApplicant} className="mt-3">
 
-        {/** NAME */}
-        <input className="form-control mb-1" name="name" placeholder="Name"
-          value={form.name} onChange={handleChange} />
-        <small className="text-danger">{errors.name}</small>
+        <input className="form-control mb-2" name="Applicant_Name" placeholder="Name"
+          value={form.Applicant_Name} onChange={handleChange} />
 
-        {/** EMAIL */}
-        <input className="form-control mb-1" name="email" placeholder="Email"
-          value={form.email} onChange={handleChange} />
-        <small className="text-danger">{errors.email}</small>
-
-        {/** GENDER */}
-        <select className="form-control mb-1" name="gender"
-          value={form.gender} onChange={handleChange}>
-          <option value="">--Select Gender--</option>
-          {genders.map((g) => <option key={g} value={g}>{g}</option>)}
+        <select className="form-control mb-2" name="Gender"
+          value={form.Gender} onChange={handleChange}>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
         </select>
 
-        {/** STATE */}
-        <select className="form-control mb-1" name="state"
-          value={form.state} onChange={handleChange}>
-          <option value="">--Select State--</option>
-          {Object.keys(stateDistricts).map((s) => <option key={s} value={s}>{s}</option>)}
+        <select className="form-control mb-2" name="State"
+          value={form.State} onChange={handleChange}>
+          <option value="">Select State</option>
+          {Object.keys(stateDistricts).map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
         </select>
 
-        {/** DISTRICT */}
-        <select className="form-control mb-1" name="district"
-          value={form.district} onChange={handleChange} disabled={!form.state}>
-          <option value="">--Select District--</option>
-          {form.state && stateDistricts[form.state].map((d) => (
+        <select className="form-control mb-2" name="District"
+          value={form.District} onChange={handleChange}>
+          <option value="">Select District</option>
+          {form.State && stateDistricts[form.State]?.map((d) => (
             <option key={d} value={d}>{d}</option>
           ))}
         </select>
 
-        {/** PINCODE */}
-        <input className="form-control mb-1" name="pincode" placeholder="Pincode"
-          value={form.pincode} onChange={handleChange} />
-        <small className="text-danger">{errors.pincode}</small>
+        <input className="form-control mb-2" name="Pincode" placeholder="Pincode"
+          value={form.Pincode} onChange={handleChange} />
 
-        {/** DATES */}
-        <label className="mt-2"><b>Date of Birth</b></label>
-        <input type="date" className="form-control mb-1" name="dob"
-          value={form.dob} onChange={handleChange} />
-        <small className="text-danger">{errors.dob}</small>
-
-        <label><b>Application Date</b></label>
-        <input type="date" className="form-control mb-1" name="application_date"
-          value={form.application_date} onChange={handleChange} />
-        <small className="text-danger">{errors.application_date}</small>
-
-        {/** DROPDOWNS */}
-        <select className="form-control mb-1" name="ownership"
-          value={form.ownership} onChange={handleChange}>
-          <option value="">--Select Ownership--</option>
-          {ownership.map((o) => <option key={o} value={o}>{o}</option>)}
+        <select className="form-control mb-2" name="Ownership"
+          value={form.Ownership} onChange={handleChange}>
+          <option value="">Select Ownership</option>
+          {ownershipOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
         </select>
 
-        <select className="form-control mb-1" name="govtID_type"
-          value={form.govtID_type} onChange={handleChange}>
-          <option value="">--Select Govt ID Type--</option>
-          {idTypes.map((id) => <option key={id} value={id}>{id}</option>)}
+        <select className="form-control mb-2" name="GovtID_Type"
+          value={form.GovtID_Type} onChange={handleChange}>
+          <option value="">Select Govt ID Type</option>
+          {idTypes.map((id) => (
+            <option key={id} value={id}>{id}</option>
+          ))}
         </select>
 
-        <input className="form-control mb-1" name="id_number" placeholder="ID Number"
-          value={form.id_number} onChange={handleChange} />
+        <input className="form-control mb-2" name="ID_Number" placeholder="ID Number"
+          value={form.ID_Number} onChange={handleChange} />
 
-        <select className="form-control mb-1" name="category"
-          value={form.category} onChange={handleChange}>
-          <option value="">--Select Category--</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+        <select className="form-control mb-3" name="Category"
+          value={form.Category} onChange={handleChange}>
+          <option value="">Select Category</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
 
-        <input className="form-control mb-2" name="load_applied" placeholder="Load Applied (KW)"
-          value={form.load_applied} onChange={handleChange} />
-
-        <button className="btn btn-primary w-100">Add Applicant</button>
+        <button className="btn btn-success w-100">Update Applicant</button>
       </form>
     </div>
   );
 }
 
-export default AddApplicant;
+export default EditApplicant;

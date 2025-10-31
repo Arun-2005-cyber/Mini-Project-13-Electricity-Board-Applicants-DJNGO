@@ -69,6 +69,10 @@ function Header() {
                     <Link className="nav-link text-white">Signup</Link>
                   </LinkContainer>
                 </li>
+
+                <li className="nav-item">
+                  <Link className="nav-link" to="/add-applicant">Add Applicant</Link>
+                </li>
               </>
             )}
           </ul>

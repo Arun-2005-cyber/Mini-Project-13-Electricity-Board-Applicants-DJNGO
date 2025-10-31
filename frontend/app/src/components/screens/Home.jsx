@@ -5,6 +5,8 @@ import Datepicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Link, useLocation } from 'react-router-dom';
 import API_URL from "../../config";
+import axios from 'axios';
+
 
 function Home() {
   const [data, setData] = useState([]);
@@ -36,6 +38,22 @@ function Home() {
     return () => clearTimeout(delayDebounce);
   }, [currentPage, startDate, endDate, searchQuery]);
 
+const deleteApplicant = async (id) => {
+  const token = localStorage.getItem("token");
+
+  if (!window.confirm("Delete this applicant?")) return;
+
+  try {
+    await axios.delete(`${API_URL}/admin/applicants/${id}/`, {
+      headers: { Authorization: `Token ${token}` },
+    });
+    fetchData();
+  } catch (error) {
+    alert("Failed to delete applicant");
+  }
+};
+
+
   const fetchData = async () => {
     // ✅ Only show loader for initial load or full page navigation
     if (!searchQuery && !startDate && !endDate) {
@@ -49,8 +67,8 @@ function Home() {
       if (searchQuery)
         url += `&search=${searchQuery}`;
 
-      
-       const token = localStorage.getItem("token");
+
+      const token = localStorage.getItem("token");
       const response = await fetch(url, {
         headers: {
           "Authorization": token ? `Token ${token}` : undefined,
@@ -144,6 +162,7 @@ function Home() {
       </div>
     );
   };
+
 
   return (
     <div className="container mt-3">
@@ -245,6 +264,15 @@ function Home() {
                         >
                           <i className="fa-solid fa-pen-to-square me-1"></i> Edit
                         </Link>
+                      </td>
+
+                      <td className="text-center">
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => deleteApplicant(connection.id)}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))

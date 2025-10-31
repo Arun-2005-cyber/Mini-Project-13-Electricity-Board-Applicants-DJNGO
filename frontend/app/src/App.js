@@ -8,12 +8,13 @@ import LoginScreen from "./components/screens/LoginScreen.jsx";
 import SignupScreen from "./components/screens/SignupScreen.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./Context/AuthContext";
+import AddApplicant from "./components/screens/AddApplicant";
 
 function App() {
   return (
-      <BrowserRouter>
-    <AuthProvider>
-    
+    <BrowserRouter>
+      <AuthProvider>
+
         <Header />
         <Routes>
           <Route
@@ -42,10 +43,16 @@ function App() {
           />
           <Route path="/login/" element={<LoginScreen />} />
           <Route path="/signup/" element={<SignupScreen />} />
+
+          <Route
+            path="/add-applicant"
+            element={<PrivateRoute><AddApplicant /></PrivateRoute>}
+          />
+
         </Routes>
-         </AuthProvider>
-      </BrowserRouter>
-   
+      </AuthProvider>
+    </BrowserRouter>
+
   );
 }
 

@@ -3,7 +3,7 @@ from app import views
 from .views import ConnectionListView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .api_views import RegisterAPIView, CurrentUserAPIView
-from .admin_api_views import ApplicantListAPIView, ApplicantDetailAPIView
+from .applicant_api_views import ApplicantListAPIView, ApplicantDetailAPIView
 from app.views_auth import delete_applicant, signup, login_view,create_applicant
 
 urlpatterns = [
@@ -16,8 +16,8 @@ urlpatterns = [
     path('update_applicant/<int:id>/', views.update_applicant, name='update_applicant'),
     path('connectionvisualization/',views.connectionvisualization,name='connectionvisualization'),
     path('connectionrequestdata/',views.connectionrequestdata,name='connectionrequestdata'),
-    path("admin/applicant/add/", create_applicant, name="create-applicant"),
-    path("admin/applicant/delete/<int:id>/", delete_applicant, name="delete-applicant"),
+    path('applicants/', ApplicantListAPIView.as_view(), name='applicant-list'),
+    path('applicants/<int:pk>/', ApplicantDetailAPIView.as_view(), name='applicant-detail'),
 
     # path('login/',views.handlelogin,name='handlelogin')
 ]

@@ -23,6 +23,7 @@ from django.http import JsonResponse
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from .models import Connection 
+from rest_framework.permissions import AllowAny
 
 # Create your views here.
 def index(request):
@@ -385,21 +386,16 @@ def connectionrequestdata(request):
         'total_requests': total_requests
     })
 
-
-
-# ✅ View all applicants (Admin only)
-@api_view(['GET', 'PATCH'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAdminUser])
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def admin_applicant_list(request):
     applicants = Applicant.objects.all()
     serializer = ApplicantSerializer(applicants, many=True)
     return Response(serializer.data)
 
 
-# ✅ Delete applicant (Admin only)
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_delete_applicant(request, id):
     try:
         applicant = Applicant.objects.get(id=id)
@@ -407,3 +403,4 @@ def admin_delete_applicant(request, id):
         return Response({'message': 'Applicant deleted successfully'})
     except Applicant.DoesNotExist:
         return Response({'error': 'Applicant not found'}, status=404)
+

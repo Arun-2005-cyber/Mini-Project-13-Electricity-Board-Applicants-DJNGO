@@ -11,9 +11,10 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from .models import Applicant, Connection, Status
-from .serializers import ApplicantSerializer
+from .serializers import ApplicantSerializer,ConnectionSerializer
 from django.utils import timezone
 
 

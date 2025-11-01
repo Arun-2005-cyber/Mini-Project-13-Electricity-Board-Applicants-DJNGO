@@ -32,25 +32,38 @@ class ApplicantRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIVie
 # ✅ Correct Applicant create view (with auto Connection generation)
 class ApplicantCreateView(APIView):
     def post(self, request):
+        print("📩 Incoming POST data:", request.data)
+
         serializer = ApplicantSerializer(data=request.data)
 
-        if serializer.is_valid():
-            applicant = serializer.save()
+        try:
+            if serializer.is_valid():
+                applicant = serializer.save()
 
-            # Default status = Pending
-            default_status, _ = Status.objects.get_or_create(Status_Name="Pending")
+                # ✅ Default status = Pending
+                default_status, _ = Status.objects.get_or_create(Status_Name="Pending")
 
-            # Auto create connection entry
-            Connection.objects.create(
-                Applicant=applicant,
-                Load_Applied=0,
-                Date_of_Application=timezone.now().date(),
-                Status=default_status,
-                Reviewer_ID=None,
-                Reviewer_Name=None,
-                Reviewer_Comments="Documents Verification in progress"
-            )
+                # ✅ Create linked connection
+                Connection.objects.create(
+                    Applicant=applicant,
+                    Load_Applied=0,
+                    Date_of_Application=timezone.now().date(),
+                    Status=default_status,
+                    Reviewer_ID=None,
+                    Reviewer_Name=None,
+                    Reviewer_Comments="Documents Verification in progress"
+                )
 
-            return Response({"message": "Applicant & Connection created successfully"}, status=201)
-        print("❌ Serializer Error:", serializer.errors)
-        return Response(serializer.errors, status=400)
+                return Response(
+                    {"message": "Applicant & Connection created successfully"},
+                    status=status.HTTP_201_CREATED
+                )
+
+            else:
+                print("❌ Serializer Validation Error:", serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            print("🔥 Server crashed on applicant create:", str(e))
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

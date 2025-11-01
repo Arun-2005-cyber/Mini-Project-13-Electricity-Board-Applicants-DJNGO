@@ -22,7 +22,7 @@ urlpatterns = [
 
     # new REST endpoints (DRF)
     path('applicant/', ApplicantListCreateAPIView.as_view(), name='applicant-list'),
-    path('applicant/<int:pk>/', ApplicantRetrieveUpdateDestroyAPIView.as_view(), name='applicant-detail'),
+    path('connection/<int:pk>/', ApplicantRetrieveUpdateDestroyAPIView.as_view(), name='applicant-detail'),
     path('applicant/create/', ApplicantCreateView.as_view()),
 
     # optional older admin endpoints (if you still want them)

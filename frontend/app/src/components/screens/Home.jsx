@@ -42,7 +42,7 @@ const deleteApplicant = async (id) => {
   if (!window.confirm("Delete this applicant?")) return;
 
   try {
-    await axios.delete(`${API_URL}/applicant/${id}/`, {
+    await axios.delete(`${API_URL}/connection/${id}/`, {
       headers: {
         Authorization: `Token ${localStorage.getItem("token")}`,
       }

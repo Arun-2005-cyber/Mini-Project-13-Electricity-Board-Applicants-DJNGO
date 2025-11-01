@@ -24,9 +24,10 @@ class ApplicantListCreateAPIView(generics.ListCreateAPIView):
 
 
 # ✅ Single applicant retrieve/update/delete
-class ApplicantRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Applicant.objects.all()
-    serializer_class = ApplicantSerializer
+class ConnectionRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Connection.objects.all()
+    serializer_class = ConnectionSerializer
+
 
 
 # ✅ Correct Applicant create view (with auto Connection generation)

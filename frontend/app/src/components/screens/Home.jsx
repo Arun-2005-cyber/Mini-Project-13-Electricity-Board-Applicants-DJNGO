@@ -39,21 +39,23 @@ function Home() {
   }, [currentPage, startDate, endDate, searchQuery]);
 
 const deleteApplicant = async (id) => {
-  const token = localStorage.getItem("token");
-
   if (!window.confirm("Delete this applicant?")) return;
 
   try {
-   axios.delete(`${API_URL}/api/applicant/${id}/`, {
-  headers: {
-    Authorization: `Token ${localStorage.getItem("token")}`,
-  }
-});
+    await axios.delete(`${API_URL}/applicant/${id}/`, {
+      headers: {
+        Authorization: `Token ${localStorage.getItem("token")}`,
+      }
+    });
+
     fetchData();
+    alert("Applicant deleted successfully");
   } catch (error) {
+    console.error(error);
     alert("Failed to delete applicant");
   }
 };
+
 
 
   const fetchData = async () => {

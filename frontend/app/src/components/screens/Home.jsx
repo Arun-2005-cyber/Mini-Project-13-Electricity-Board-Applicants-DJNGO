@@ -7,7 +7,6 @@ import { Link, useLocation } from 'react-router-dom';
 import API_URL from "../../config";
 import axios from 'axios';
 
-
 function Home() {
   const [data, setData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -21,7 +20,6 @@ function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const location = useLocation();
 
-  // ✅ Show success message temporarily
   useEffect(() => {
     if (location.state?.successMsg) {
       setSuccessMsg(location.state.successMsg);
@@ -30,7 +28,6 @@ function Home() {
     }
   }, [location.state]);
 
-  // ✅ Fetch data when filters/search/page change
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchData();
@@ -38,28 +35,25 @@ function Home() {
     return () => clearTimeout(delayDebounce);
   }, [currentPage, startDate, endDate, searchQuery]);
 
-const deleteApplicant = async (id) => {
-  if (!window.confirm("Delete this applicant?")) return;
+  const deleteApplicant = async (id) => {
+    if (!window.confirm("Delete this applicant?")) return;
 
-  try {
-    await axios.delete(`${API_URL}/api/connection/${id}/`, {
-      headers: {
-        Authorization: `Token ${localStorage.getItem("token")}`,
-      }
-    });
+    try {
+      await axios.delete(`${API_URL}/api/connection/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        }
+      });
 
-    fetchData();
-    alert("Applicant deleted successfully");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to delete applicant");
-  }
-};
-
-
+      fetchData();
+      alert("Applicant deleted successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete applicant");
+    }
+  };
 
   const fetchData = async () => {
-    // ✅ Only show loader for initial load or full page navigation
     if (!searchQuery && !startDate && !endDate) {
       setLoading(true);
     }
@@ -70,7 +64,6 @@ const deleteApplicant = async (id) => {
         url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
       if (searchQuery)
         url += `&search=${searchQuery}`;
-
 
       const token = localStorage.getItem("token");
       const response = await fetch(url, {
@@ -88,7 +81,6 @@ const deleteApplicant = async (id) => {
       setTotalItems(jsonData.total_items || 0);
       setErrorMsg("");
 
-      // ✅ If user searched random ID and no results found
       if (jsonData.data?.length === 0 && searchQuery) {
         setErrorMsg("⚠️ No applicants found for your search.");
       }
@@ -100,7 +92,6 @@ const deleteApplicant = async (id) => {
     }
   };
 
-  // ✅ Pagination controls
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) setCurrentPage(page);
   };
@@ -117,56 +108,18 @@ const deleteApplicant = async (id) => {
 
     return (
       <div className="d-flex justify-content-center align-items-center mt-4 flex-wrap">
-        <Button
-          variant="outline-secondary"
-          className="mx-1"
-          disabled={currentPage === 1}
-          onClick={() => handlePageChange(1)}
-        >
-          ⏮ First
-        </Button>
-
-        <Button
-          variant="outline-secondary"
-          className="mx-1"
-          disabled={currentPage === 1}
-          onClick={() => handlePageChange(currentPage - 1)}
-        >
-          ← Prev
-        </Button>
+        <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(1)}>⏮ First</Button>
+        <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>← Prev</Button>
 
         {pageNumbers.map((num) => (
-          <Button
-            key={num}
-            variant={num === currentPage ? "primary" : "outline-secondary"}
-            className="mx-1"
-            onClick={() => handlePageChange(num)}
-          >
-            {num}
-          </Button>
+          <Button key={num} variant={num === currentPage ? "primary" : "outline-secondary"} className="mx-1" onClick={() => handlePageChange(num)}>{num}</Button>
         ))}
 
-        <Button
-          variant="outline-secondary"
-          className="mx-1"
-          disabled={currentPage === totalPages}
-          onClick={() => handlePageChange(currentPage + 1)}
-        >
-          Next →
-        </Button>
-
-        <Button
-          variant="outline-secondary"
-          className="mx-1"
-          disabled={currentPage === totalPages}
-          onClick={() => handlePageChange(totalPages)}
-        >
-          Last ⏭
-        </Button>
+        <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next →</Button>
+        <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(totalPages)}>Last ⏭</Button>
       </div>
     );
   };
-
 
   return (
     <div className="container mt-3">
@@ -183,26 +136,19 @@ const deleteApplicant = async (id) => {
 
       {!loading && (
         <>
-          {/* ✅ Filters */}
           <Row className="mb-3 align-items-end">
             <p>Filter by the Date of Application</p>
+
             <Col md={2}>
-              <Datepicker
-                selected={startDate}
-                className="form-control"
-                onChange={setStartDate}
-                placeholderText="From Date"
-              />
+              <Datepicker selected={startDate} className="form-control" onChange={setStartDate} placeholderText="From Date" />
             </Col>
+
             <Col md={2}>
-              <Datepicker
-                selected={endDate}
-                className="form-control"
-                onChange={setEndDate}
-                placeholderText="To Date"
-              />
+              <Datepicker selected={endDate} className="form-control" onChange={setEndDate} placeholderText="To Date" />
             </Col>
+
             <Col md={3}></Col>
+
             <Col md={5}>
               <input
                 type="text"
@@ -210,19 +156,19 @@ const deleteApplicant = async (id) => {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setCurrentPage(1); // ✅ Reset to first page when searching
+                  setCurrentPage(1);
                 }}
                 placeholder="Search by applicant ID or name"
               />
             </Col>
           </Row>
 
-          {/* ✅ Data Table */}
           <div className="table-container">
             <table className="table table-bordered table-striped">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>S.No</th>
+                  <th>DB ID</th>
                   <th>Applicant Name</th>
                   <th>Gender</th>
                   <th>District</th>
@@ -241,11 +187,17 @@ const deleteApplicant = async (id) => {
                   <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {data.length > 0 ? (
-                  data.map((connection) => (
+                  data.map((connection, index) => (
                     <tr key={connection.id}>
+                      {/* ✅ Serial number */}
+                      <td>{(currentPage - 1) * 10 + index + 1}</td>
+
+                      {/* ✅ True database ID */}
                       <td>{connection.id}</td>
+
                       <td>{connection.Applicant.Applicant_Name}</td>
                       <td>{connection.Applicant.Gender}</td>
                       <td>{connection.Applicant.District}</td>
@@ -261,20 +213,13 @@ const deleteApplicant = async (id) => {
                       <td>{connection.Reviewer_ID}</td>
                       <td>{connection.Reviewer_Name}</td>
                       <td>{connection.Reviewer_Comments}</td>
-                      <td className="text-center">
-                        <Link
-                          className="btn btn-outline-primary w-100"
-                          to={`/EditApplicant/${connection.id}`}
-                        >
-                          <i className="fa-solid fa-pen-to-square me-1"></i> Edit
-                        </Link>
-                      </td>
 
-                      <td className="text-center">
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => deleteApplicant(connection.id)}
-                        >
+                      <td className="text-center d-flex gap-2">
+                        <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>
+                          Edit
+                        </Link>
+
+                        <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>
                           Delete
                         </button>
                       </td>
@@ -282,16 +227,13 @@ const deleteApplicant = async (id) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="17" className="text-center text-muted">
-                      No records found
-                    </td>
+                    <td colSpan="17" className="text-center text-muted">No records found</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
 
-          {/* ✅ Pagination */}
           {renderPagination()}
         </>
       )}

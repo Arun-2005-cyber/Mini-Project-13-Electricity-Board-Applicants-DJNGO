@@ -65,10 +65,10 @@ class Connection(models.Model):
     Date_of_Application=models.DateField()
     Date_of_Approval=models.DateField(null=True,blank=True)
     Modified_Date=models.DateField(null=True,blank=True)
-    Status=models.ForeignKey(Status,on_delete=models.CASCADE)
-    Reviewer_ID=models.IntegerField()
+    Status=models.ForeignKey(Status,on_delete=models.CASCADE,null=True,blank=True)
+    Reviewer_ID=models.IntegerField(null=True, blank=True)
     Reviewer_Name = models.CharField(max_length=100, null=True, blank=True)
-    Reviewer_Comments=models.CharField(max_length=50,choices=REVIEWER_COMMENTS_CHOICES)
+    Reviewer_Comments=models.CharField(max_length=50,choices=REVIEWER_COMMENTS_CHOICES,null=True,blank=True)
 
     def __str__(self):
         return f"Connection ID: {self.id} - Applicant: {self.Applicant}"

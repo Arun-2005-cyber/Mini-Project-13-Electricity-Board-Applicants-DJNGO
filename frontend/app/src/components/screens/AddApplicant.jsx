@@ -130,7 +130,7 @@ function AddApplicant() {
             ))}
           </select>
 
-          <button className="btn btn-success w-100">Add Applicant</button>
+          <button className="btn btn-primary w-100">Add Applicant</button>
         </form>
       )}
     </div>

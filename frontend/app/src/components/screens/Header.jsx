@@ -61,6 +61,12 @@ function Header() {
                     Hello, {user.username}
                   </span>
                 </li>
+
+                <li className="nav-item">
+                  <LinkContainer to="/profile">
+                    <Link className="nav-link text-white">Profile</Link>
+                  </LinkContainer>
+                </li>
                 <li className="nav-item">
                   <button className="btn btn-light btn-sm ms-2" onClick={handleLogout}>
                     Logout
@@ -78,12 +84,6 @@ function Header() {
                 <li className="nav-item">
                   <LinkContainer to="/signup">
                     <Link className="nav-link text-white">Signup</Link>
-                  </LinkContainer>
-                </li>
-
-                <li className="nav-item">
-                  <LinkContainer to="/profile">
-                    <Link className="nav-link text-white">Profile</Link>
                   </LinkContainer>
                 </li>
 

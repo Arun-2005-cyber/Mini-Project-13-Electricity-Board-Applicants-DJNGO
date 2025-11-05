@@ -5,13 +5,22 @@ from .models import Applicant, Connection, Status
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    applicant_count = serializers.SerializerMethodField()
+    applicants = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+        fields = ['username', 'email', 'applicant_count', 'applicants']
+
+    def get_applicant_count(self, obj):
+        return Applicant.objects.filter(created_by=obj).count()
+
+    def get_applicants(self, obj):
+        return Applicant.objects.filter(created_by=obj).values("id", "Applicant_Name")
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email')
 
 
 class ApplicantSerializer(serializers.ModelSerializer):

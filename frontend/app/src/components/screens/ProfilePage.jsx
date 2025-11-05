@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiFetch } from "../../utils/api";  // adjust path if needed
+import { apiFetch } from "../../utils/api";
 import { useAuth } from "../../Context/AuthContext";
 import Loader from "../Loader";
 import Message from "../Message";
@@ -10,8 +10,6 @@ function ProfilePage() {
   const [form, setForm] = useState({
     username: "",
     email: "",
-    first_name: "",
-    last_name: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -21,15 +19,32 @@ function ProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [appData, setAppData] = useState({ total: 0, list: [] });
 
-  // ✅ Fetch user profile
+  // Auto clear message after 3 sec
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   useEffect(() => {
     async function fetchProfile() {
       try {
         const res = await apiFetch("/api/profile/");
         const data = await res.json();
-        setForm(data);
-      } catch (err) {
+
+        setForm({
+          username: data.username,
+          email: data.email,
+        });
+
+        setAppData({
+          total: data.total_applicants,
+          list: data.applicants,
+        });
+      } catch {
         setMessage("Failed to load profile");
       } finally {
         setLoading(false);
@@ -38,11 +53,8 @@ function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // ✅ Update Profile
   const updateProfile = async (e) => {
     e.preventDefault();
-    setMessage("");
-
     try {
       const res = await apiFetch("/api/profile/", {
         method: "PUT",
@@ -50,21 +62,18 @@ function ProfilePage() {
       });
 
       if (res.ok) {
-        setMessage("✅ Profile updated successfully!");
+        setMessage("✅ Profile updated successfully");
       } else {
-        const errorData = await res.json();
-        setMessage(errorData.error || "Profile update failed");
+        const data = await res.json();
+        setMessage(data.error || "Profile update failed");
       }
     } catch {
       setMessage("Error updating profile");
     }
   };
 
-  // ✅ Change Password
   const changePassword = async (e) => {
     e.preventDefault();
-    setMessage("");
-
     try {
       const res = await apiFetch("/api/profile/change-password/", {
         method: "PUT",
@@ -72,11 +81,11 @@ function ProfilePage() {
       });
 
       if (res.ok) {
-        alert("Password changed! Please login again.");
+        alert("Password changed! Login again.");
         logout();
       } else {
-        const errorData = await res.json();
-        setMessage(errorData.error || "Password change failed");
+        const data = await res.json();
+        setMessage(data.error || "Error changing password");
       }
     } catch {
       setMessage("Error changing password");
@@ -87,56 +96,62 @@ function ProfilePage() {
 
   return (
     <div className="container mt-5">
-      <h3>User Profile</h3>
 
+      <h3 className="mb-3">My Profile</h3>
       {message && <Message variant="info">{message}</Message>}
 
-      <form className="col-md-6" onSubmit={updateProfile}>
-        <div className="mb-2">
-          <label>Username</label>
-          <input className="form-control" value={form.username}
-            onChange={e => setForm({ ...form, username: e.target.value })}/>
+      <div className="row">
+        
+        <div className="col-md-6 mb-4">
+          <h5>Account Details</h5>
+          <form onSubmit={updateProfile}>
+            <div className="mb-2">
+              <label>Username</label>
+              <input className="form-control" value={form.username}
+                onChange={e => setForm({ ...form, username: e.target.value })}/>
+            </div>
+
+            <div className="mb-2">
+              <label>Email</label>
+              <input className="form-control" value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}/>
+            </div>
+
+            <button className="btn btn-primary mt-2" type="submit">Update Profile</button>
+          </form>
         </div>
 
-        <div className="mb-2">
-          <label>First Name</label>
-          <input className="form-control" value={form.first_name}
-            onChange={e => setForm({ ...form, first_name: e.target.value })}/>
+        <div className="col-md-6 mb-4">
+          <h5>Change Password</h5>
+          <form onSubmit={changePassword}>
+            <div className="mb-2">
+              <label>Old Password</label>
+              <input type="password" className="form-control"
+                onChange={e => setPasswordData({ ...passwordData, old_password: e.target.value })}/>
+            </div>
+
+            <div className="mb-2">
+              <label>New Password</label>
+              <input type="password" className="form-control"
+                onChange={e => setPasswordData({ ...passwordData, new_password: e.target.value })}/>
+            </div>
+
+            <button className="btn btn-warning mt-2" type="submit">Change Password</button>
+          </form>
         </div>
+      </div>
 
-        <div className="mb-2">
-          <label>Last Name</label>
-          <input className="form-control" value={form.last_name}
-            onChange={e => setForm({ ...form, last_name: e.target.value })}/>
-        </div>
+      <hr />
 
-        <div className="mb-2">
-          <label>Email</label>
-          <input className="form-control" value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })}/>
-        </div>
+      <h5>My Applicants ({appData.total})</h5>
+      <ul className="list-group mt-2">
+        {appData.list.map(a => (
+          <li className="list-group-item" key={a.id}>
+            #{a.id} — {a.Applicant_Name}
+          </li>
+        ))}
+      </ul>
 
-        <button className="btn btn-primary mt-2" type="submit">Update Profile</button>
-      </form>
-
-      <hr className="my-4" />
-
-      <h4>Change Password</h4>
-      <form className="col-md-6" onSubmit={changePassword}>
-        <div className="mb-2">
-          <label>Old Password</label>
-          <input type="password" className="form-control"
-            onChange={e => setPasswordData({ ...passwordData, old_password: e.target.value })}/>
-        </div>
-
-        <div className="mb-2">
-          <label>New Password</label>
-          <input type="password" className="form-control"
-            onChange={e => setPasswordData({ ...passwordData, new_password: e.target.value })}/>
-        </div>
-
-        <button className="btn btn-warning mt-2">Change Password</button>
-      </form>
     </div>
   );
 }

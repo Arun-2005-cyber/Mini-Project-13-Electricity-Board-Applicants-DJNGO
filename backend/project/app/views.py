@@ -57,7 +57,8 @@ def uploaddata(request):
                     Ownership=row['Ownership'],
                     GovtID_Type=row['GovtID_Type'],
                     ID_Number=row['ID_Number'],
-                    Category=row['Category']
+                    Category=row['Category'],
+                    created_by=request.user 
                 ).first()
 
                 if not applicant:
@@ -70,7 +71,8 @@ def uploaddata(request):
                         Ownership=row['Ownership'],
                         GovtID_Type=row['GovtID_Type'],
                         ID_Number=row['ID_Number'],
-                        Category=row['Category']
+                        Category=row['Category'],
+                        created_by=request.user 
                     )
 
                 status, _ = Status.objects.get_or_create(Status_Name=row['Status'])

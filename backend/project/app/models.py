@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 # Create your models here.
 class Status(models.Model):
     STATUS_CHOICES=[
@@ -32,7 +33,7 @@ class Applicant(models.Model):
         ('Residential','Residential'),
         ('Commercial','Commercial'),
     ]
-
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     Applicant_Name=models.CharField(max_length=100)
     Gender=models.CharField(max_length=10,choices=GENDER_CHOICES)
     District=models.CharField(max_length=100)

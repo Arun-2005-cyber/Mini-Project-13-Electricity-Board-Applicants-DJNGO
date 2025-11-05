@@ -26,7 +26,7 @@ function ProfilePage() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await apiFetch("/profile/");
+        const res = await apiFetch("/api/profile/");
         const data = await res.json();
         setForm(data);
       } catch (err) {
@@ -44,7 +44,7 @@ function ProfilePage() {
     setMessage("");
 
     try {
-      const res = await apiFetch("/profile/", {
+      const res = await apiFetch("/api/profile/", {
         method: "PUT",
         body: JSON.stringify(form),
       });
@@ -66,7 +66,7 @@ function ProfilePage() {
     setMessage("");
 
     try {
-      const res = await apiFetch("/profile/change-password/", {
+      const res = await apiFetch("/api/profile/change-password/", {
         method: "PUT",
         body: JSON.stringify(passwordData),
       });

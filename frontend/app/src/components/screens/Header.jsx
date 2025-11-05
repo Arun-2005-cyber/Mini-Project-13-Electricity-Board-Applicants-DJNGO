@@ -80,6 +80,13 @@ function Header() {
                     <Link className="nav-link text-white">Signup</Link>
                   </LinkContainer>
                 </li>
+
+                <li className="nav-item">
+                  <LinkContainer to="/profile">
+                    <Link className="nav-link text-white">Profile</Link>
+                  </LinkContainer>
+                </li>
+
               </>
             )}
           </ul>

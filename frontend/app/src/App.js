@@ -9,6 +9,8 @@ import SignupScreen from "./components/screens/SignupScreen.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./Context/AuthContext";
 import AddApplicant from "./components/screens/AddApplicant";
+import ProfilePage from "./components/screens/ProfilePage.jsx";
+
 
 function App() {
   return (
@@ -47,6 +49,15 @@ function App() {
           <Route
             path="/add-applicant"
             element={<PrivateRoute><AddApplicant /></PrivateRoute>}
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <ProfilePage />
+              </PrivateRoute>
+            }
           />
 
         </Routes>

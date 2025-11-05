@@ -25,6 +25,7 @@ from django.db.models.functions import TruncMonth
 from .models import Connection 
 from rest_framework.permissions import AllowAny
 
+
 # Create your views here.
 def index(request):
     return render(request, "index.html")

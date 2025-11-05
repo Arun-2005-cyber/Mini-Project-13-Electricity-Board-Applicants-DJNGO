@@ -7,6 +7,54 @@ import json, jwt, datetime
 from django.conf import settings
 from rest_framework.authtoken.models import Token
 from .models import Applicant, Status, Connection
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserProfileSerializer
+from rest_framework.response import Response
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    user = request.user
+
+    if request.method == "GET":
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data)
+
+    # Update Profile
+    if request.method == "PUT":
+        new_username = request.data.get("username", user.username)
+        new_email = request.data.get("email", user.email)
+
+        # Prevent duplicate username
+        if User.objects.exclude(id=user.id).filter(username=new_username).exists():
+            return Response({"error": "Username already taken!"}, status=400)
+
+        user.username = new_username
+        user.email = new_email
+        user.first_name = request.data.get("first_name", user.first_name)
+        user.last_name = request.data.get("last_name", user.last_name)
+        user.save()
+
+        return Response({"message": "Profile updated successfully!"})
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    user = request.user
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
+
+    if not user.check_password(old_password):
+        return Response({"error": "Old password is incorrect"}, status=400)
+
+    user.set_password(new_password)
+    user.save()
+
+    return Response({"message": "Password updated successfully! Please login again"})
+
 
 
 @csrf_exempt

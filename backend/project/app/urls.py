@@ -7,7 +7,7 @@ from .applicant_api_views import (
     ApplicantListCreateAPIView,
     ConnectionRetrieveUpdateDestroyAPIView,ApplicantCreateView
 )
-from app.views_auth import signup, login_view, create_applicant, delete_applicant
+from app.views_auth import change_password, signup, login_view, create_applicant, delete_applicant, user_profile
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -28,4 +28,6 @@ urlpatterns = [
     # optional older admin endpoints (if you still want them)
     path("admin/applicant/add/", create_applicant, name="create-applicant"),
     path("admin/applicant/delete/<int:id>/", delete_applicant, name="delete-applicant"),
+    path("profile/", user_profile, name="user_profile"),
+    path("profile/change-password/", change_password, name="change_password"),
 ]

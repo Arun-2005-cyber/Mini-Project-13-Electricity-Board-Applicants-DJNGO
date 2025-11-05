@@ -3,6 +3,11 @@ from django.contrib.auth.models import User
 from .models import Applicant, Connection, Status
 
 
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

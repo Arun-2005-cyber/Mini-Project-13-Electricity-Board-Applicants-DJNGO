@@ -20,7 +20,6 @@ function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const location = useLocation();
 
-  // ✅ Show success message from redirected page
   useEffect(() => {
     if (location.state?.successMsg) {
       setSuccessMsg(location.state.successMsg);
@@ -29,15 +28,13 @@ function Home() {
     }
   }, [location.state]);
 
-  // ✅ Fetch data when filters/search change
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchData(searchQuery);
+      fetchData();
     }, 400);
     return () => clearTimeout(delayDebounce);
   }, [currentPage, startDate, endDate, searchQuery]);
 
-  // ✅ Delete applicant
   const deleteApplicant = async (id) => {
     if (!window.confirm("Delete this applicant?")) return;
 
@@ -49,50 +46,44 @@ function Home() {
       });
 
       fetchData();
-      setSuccessMsg("Applicant deleted successfully");
-      setTimeout(() => setSuccessMsg(""), 3000);
+      alert("Applicant deleted successfully");
     } catch (error) {
       console.error(error);
-      setErrorMsg("Failed to delete applicant");
-      setTimeout(() => setErrorMsg(""), 3000);
+      alert("Failed to delete applicant");
     }
   };
 
-  // ✅ Fetch data from backend (ID/Name search only)
-  const fetchData = async (query = "") => {
-    if (!query && !startDate && !endDate) setLoading(true);
+  const fetchData = async () => {
+    if (!searchQuery && !startDate && !endDate) {
+      setLoading(true);
+    }
 
     try {
       let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
       if (startDate && endDate)
         url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
-      if (query)
-        url += `&search=${query}`;
+      if (searchQuery)
+        url += `&search=${searchQuery}`;
 
       const token = localStorage.getItem("token");
       const response = await fetch(url, {
         headers: {
-          Authorization: token ? `Token ${token}` : undefined,
+          "Authorization": token ? `Token ${token}` : undefined,
         },
       });
 
       if (!response.ok) throw new Error(`Server error ${response.status}`);
       const jsonData = await response.json();
 
-      // ✅ Add S.No for table only (not for search)
-      const withSno = (jsonData.data || []).map((item, index) => ({
-        ...item,
-        sno: (currentPage - 1) * 10 + index + 1,
-      }));
-
-      setData(withSno);
+      setData(jsonData.data || []);
       setTotalPages(jsonData.total_pages || 1);
       setCurrentPage(jsonData.current_page || 1);
       setTotalItems(jsonData.total_items || 0);
       setErrorMsg("");
 
-      if (withSno.length === 0 && query)
+      if (jsonData.data?.length === 0 && searchQuery) {
         setErrorMsg("⚠️ No applicants found for your search.");
+      }
     } catch (error) {
       console.error("Failed to fetch API:", error);
       setErrorMsg("⚠️ Failed to load data. Please try again later.");
@@ -111,8 +102,7 @@ function Home() {
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
 
-    if (end - start + 1 < maxVisible)
-      start = Math.max(1, end - maxVisible + 1);
+    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
 
     for (let i = start; i <= end; i++) pageNumbers.push(i);
 
@@ -122,14 +112,7 @@ function Home() {
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>← Prev</Button>
 
         {pageNumbers.map((num) => (
-          <Button
-            key={num}
-            variant={num === currentPage ? "primary" : "outline-secondary"}
-            className="mx-1"
-            onClick={() => handlePageChange(num)}
-          >
-            {num}
-          </Button>
+          <Button key={num} variant={num === currentPage ? "primary" : "outline-secondary"} className="mx-1" onClick={() => handlePageChange(num)}>{num}</Button>
         ))}
 
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next →</Button>
@@ -209,8 +192,12 @@ function Home() {
                 {data.length > 0 ? (
                   data.map((connection, index) => (
                     <tr key={connection.id}>
+                      {/* ✅ Serial number */}
                       <td>{(currentPage - 1) * 10 + index + 1}</td>
+
+                      {/* ✅ True database ID */}
                       <td>{connection.id}</td>
+
                       <td>{connection.Applicant.Applicant_Name}</td>
                       <td>{connection.Applicant.Gender}</td>
                       <td>{connection.Applicant.District}</td>
@@ -226,10 +213,12 @@ function Home() {
                       <td>{connection.Reviewer_ID}</td>
                       <td>{connection.Reviewer_Name}</td>
                       <td>{connection.Reviewer_Comments}</td>
+
                       <td className="text-center d-flex gap-2">
                         <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>
                           Edit
                         </Link>
+
                         <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>
                           Delete
                         </button>

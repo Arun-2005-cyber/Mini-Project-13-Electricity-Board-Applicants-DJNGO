@@ -19,15 +19,17 @@ def user_profile(request):
     user = request.user
 
     if request.method == "GET":
-        serializer = UserProfileSerializer(user)
-        return Response(serializer.data)
+        return Response({
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        })
 
-    # Update Profile
     if request.method == "PUT":
         new_username = request.data.get("username", user.username)
         new_email = request.data.get("email", user.email)
 
-        # Prevent duplicate username
         if User.objects.exclude(id=user.id).filter(username=new_username).exists():
             return Response({"error": "Username already taken!"}, status=400)
 
@@ -37,7 +39,14 @@ def user_profile(request):
         user.last_name = request.data.get("last_name", user.last_name)
         user.save()
 
-        return Response({"message": "Profile updated successfully!"})
+        # ✅ Return updated data (IMPORTANT!)
+        return Response({
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        }, status=200)
+
 
 
 @csrf_exempt

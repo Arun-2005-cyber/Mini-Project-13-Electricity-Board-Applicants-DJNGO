@@ -18,8 +18,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", authToken);
   };
 const updateUser = (updatedUser) => {
-  setUser(updatedUser);
-  localStorage.setItem("user", JSON.stringify(updatedUser));
+  const newUser = { ...user, ...updatedUser };
+  setUser(newUser);
+  localStorage.setItem("user", JSON.stringify(newUser));
 };
 
   // ✅ Logout handler
@@ -57,7 +58,7 @@ const updateUser = (updatedUser) => {
     };
 
     fetchUser();
-  }, [token]);
+  }, [token, user]);
 
   return (
     <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout, updateUser }}>

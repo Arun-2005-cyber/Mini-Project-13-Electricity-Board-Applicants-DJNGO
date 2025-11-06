@@ -12,10 +12,6 @@ function ProfilePage() {
     email: "",
   });
 
-  const [passwordData, setPasswordData] = useState({
-    old_password: "",
-    new_password: "",
-  });
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -72,27 +68,6 @@ function ProfilePage() {
     }
   };
 
-  const changePassword = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await apiFetch("/api/profile/change-password/", {
-        method: "PUT",
-        body: JSON.stringify(passwordData),
-      });
-
-      if (res.ok) {
-        alert("Password changed! Login again.");
-        logout();
-      } else {
-        const data = await res.json();
-        setMessage(data.error || "Error changing password");
-      }
-    } catch {
-      setMessage("Error changing password");
-    }
-  };
-
-  if (loading) return <Loader text="Loading Profile..." />;
 
   return (
     <div className="container mt-5">
@@ -118,25 +93,6 @@ function ProfilePage() {
             </div>
 
             <button className="btn btn-primary mt-2" type="submit">Update Profile</button>
-          </form>
-        </div>
-
-        <div className="col-md-6 mb-4">
-          <h5>Change Password</h5>
-          <form onSubmit={changePassword}>
-            <div className="mb-2">
-              <label>Old Password</label>
-              <input type="password" className="form-control"
-                onChange={e => setPasswordData({ ...passwordData, old_password: e.target.value })}/>
-            </div>
-
-            <div className="mb-2">
-              <label>New Password</label>
-              <input type="password" className="form-control"
-                onChange={e => setPasswordData({ ...passwordData, new_password: e.target.value })}/>
-            </div>
-
-            <button className="btn btn-warning mt-2" type="submit">Change Password</button>
           </form>
         </div>
       </div>

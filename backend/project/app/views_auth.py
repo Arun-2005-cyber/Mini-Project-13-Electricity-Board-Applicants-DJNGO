@@ -1,3 +1,4 @@
+from urllib import request
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
@@ -113,6 +114,8 @@ from rest_framework.response import Response
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_applicant(request):
+    print("Authenticated user:", request.user)
+    print("Is Authenticated:", request.user.is_authenticated)
     try:
         data = request.data
 

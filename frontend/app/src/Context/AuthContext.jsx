@@ -58,7 +58,7 @@ const updateUser = (updatedUser) => {
     };
 
     fetchUser();
-  }, [token, user]);
+  }, [token]);
 
   return (
     <AuthContext.Provider value={{ user, token, isAuthenticated, login, logout, updateUser }}>

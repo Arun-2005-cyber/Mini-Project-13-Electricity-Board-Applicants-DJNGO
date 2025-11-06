@@ -17,7 +17,6 @@ from rest_framework.response import Response
 @permission_classes([IsAuthenticated])
 def user_profile(request):
     user = request.user
-
     if request.method == "GET":
         # ✅ Fetch applicants created by logged-in user
         applicants = Applicant.objects.filter(created_by=user).values("id", "Applicant_Name")
@@ -107,19 +106,18 @@ def login_view(request):
         return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
 
 
-@csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_applicant(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
-
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=401)
-
     try:
-        data = json.loads(request.body)
+        data = request.data
 
         applicant = Applicant.objects.create(
-            created_by=request.user, 
+            created_by=request.user,
             Applicant_Name=data["Applicant_Name"],
             Gender=data["Gender"],
             District=data["District"],
@@ -131,10 +129,11 @@ def create_applicant(request):
             Category=data["Category"],
         )
 
-        return JsonResponse({"success": True, "id": applicant.id})
+        return Response({"success": True, "id": applicant.id}, status=201)
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        return Response({"error": str(e)}, status=400)
+
 
 
 @csrf_exempt

@@ -5,7 +5,7 @@ import Loader from "../Loader";
 import Message from "../Message";
 
 function ProfilePage() {
-  const { logout } = useAuth();
+  const { logout, updateUser ,user} = useAuth();
 
   const [form, setForm] = useState({
     username: "",
@@ -49,24 +49,26 @@ function ProfilePage() {
     fetchProfile();
   }, []);
 
-  const updateProfile = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await apiFetch("/api/profile/", {
-        method: "PUT",
-        body: JSON.stringify(form),
-      });
+const updateProfile = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await apiFetch("/api/profile/", {
+      method: "PUT",
+      body: JSON.stringify(form),
+    });
 
-      if (res.ok) {
-        setMessage("✅ Profile updated successfully");
-      } else {
-        const data = await res.json();
-        setMessage(data.error || "Profile update failed");
-      }
-    } catch {
-      setMessage("Error updating profile");
+    const data = await res.json();
+
+    if (res.ok) {
+      updateUser(data); // 🔥 Immediately update Navbar & UI
+      setMessage("✅ Profile updated successfully");
+    } else {
+      setMessage(data.error || "Profile update failed");
     }
-  };
+  } catch {
+    setMessage("Error updating profile");
+  }
+};
 
 
   return (

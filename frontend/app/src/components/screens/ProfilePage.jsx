@@ -13,18 +13,18 @@ function ProfilePage() {
   });
 
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "info" }); // ✅ store both text + type
   const [appData, setAppData] = useState({ total: 0, list: [] });
 
-  // ✅ Clear messages after 3 seconds
+  // ✅ Clear message after 3 seconds
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(""), 3000);
+    if (message.text) {
+      const timer = setTimeout(() => setMessage({ text: "", type: "info" }), 3000);
       return () => clearTimeout(timer);
     }
   }, [message]);
 
-  // ✅ Fetch profile when page loads
+  // ✅ Fetch profile
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -38,14 +38,14 @@ function ProfilePage() {
           });
 
           setAppData({
-            total: data.total_applicants|| 0,
+            total: data.total_applicants || 0,
             list: data.applicants || [],
           });
         } else {
-          setMessage(data.error || "Failed to load profile");
+          setMessage({ text: data.error || "Failed to load profile", type: "danger" });
         }
       } catch (error) {
-        setMessage("Error fetching profile");
+        setMessage({ text: "Error fetching profile", type: "danger" });
       } finally {
         setLoading(false);
       }
@@ -54,20 +54,15 @@ function ProfilePage() {
     fetchProfile();
   }, []);
 
-  // ✅ Loader until profile is fully fetched
-  if (loading || !user) {
-    return <Loader text="Loading Profile..." />;
-  }
-
   // ✅ Update profile handler
   const updateProfile = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await apiFetch("/api/profile/", {
         method: "PUT",
         body: JSON.stringify(form),
       });
-
       const data = await res.json();
 
       if (res.ok) {
@@ -75,21 +70,27 @@ function ProfilePage() {
           username: data.username || form.username,
           email: data.email || form.email,
         });
-
-        setMessage("✅ Profile updated successfully!");
+        setMessage({ text: "✅ Profile updated successfully!", type: "success" }); // 🟢
       } else {
-        setMessage(data.error || "Profile update failed");
+        setMessage({ text: data.error || "Profile update failed", type: "danger" }); // 🔴
       }
     } catch {
-      setMessage("Error updating profile");
+      setMessage({ text: "Error updating profile", type: "danger" });
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (loading && !message.text) {
+    return <Loader text="Loading Profile..." />;
+  }
+
   return (
     <div className="container mt-5">
-
       <h3 className="mb-3">My Profile</h3>
-      {message && <Message variant="info">{message}</Message>}
+
+      {/* ✅ Colored success/failure message */}
+      {message.text && <Message variant={message.type}>{message.text}</Message>}
 
       <div className="row">
         <div className="col-md-6 mb-4">
@@ -117,8 +118,8 @@ function ProfilePage() {
               />
             </div>
 
-            <button className="btn btn-primary mt-2" type="submit">
-              Update Profile
+            <button className="btn btn-primary mt-2" type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Update Profile"}
             </button>
           </form>
         </div>

@@ -16,3 +16,7 @@ thead th {
   background-color: #f8f9fa;
   z-index: 1;
 }
+.highlight-row {
+  background-color: #ffeaa7 !important;
+  transition: background-color 0.5s ease-in-out;
+}

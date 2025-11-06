@@ -20,42 +20,7 @@ function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const location = useLocation();
 
-
-const handleSearch = async () => {
-  const snoRegex = /^\d+$/;
-
-  if (snoRegex.test(searchQuery)) {
-    const sno = parseInt(searchQuery, 10);
-
-    // 🔹 Compute which page this S.No belongs to
-    const itemsPerPage = 10;
-    const targetPage = Math.ceil(sno / itemsPerPage);
-
-    // 🔹 Update page (trigger useEffect + fetch)
-    setCurrentPage(targetPage);
-
-    // Wait a short delay for fetchData to complete
-    setTimeout(() => {
-      const startIndex = (targetPage - 1) * itemsPerPage;
-      const targetIndex = sno - startIndex - 1;
-
-      // Highlight the searched row
-      const row = document.querySelectorAll("table tbody tr")[targetIndex];
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        row.classList.add("highlight-row");
-        setTimeout(() => row.classList.remove("highlight-row"), 2500);
-      }
-    }, 800);
-
-    return;
-  }
-
-  // 🔹 Otherwise, normal backend search (name/id)
-  await fetchData(searchQuery);
-};
-
-
+  // ✅ Show success message from redirected page
   useEffect(() => {
     if (location.state?.successMsg) {
       setSuccessMsg(location.state.successMsg);
@@ -64,13 +29,15 @@ const handleSearch = async () => {
     }
   }, [location.state]);
 
+  // ✅ Fetch data when filters/search change
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      handleSearch();
+      fetchData(searchQuery);
     }, 400);
     return () => clearTimeout(delayDebounce);
   }, [currentPage, startDate, endDate, searchQuery]);
 
+  // ✅ Delete applicant
   const deleteApplicant = async (id) => {
     if (!window.confirm("Delete this applicant?")) return;
 
@@ -82,54 +49,57 @@ const handleSearch = async () => {
       });
 
       fetchData();
-      alert("Applicant deleted successfully");
+      setSuccessMsg("Applicant deleted successfully");
+      setTimeout(() => setSuccessMsg(""), 3000);
     } catch (error) {
       console.error(error);
-      alert("Failed to delete applicant");
+      setErrorMsg("Failed to delete applicant");
+      setTimeout(() => setErrorMsg(""), 3000);
     }
   };
 
+  // ✅ Fetch data from backend (ID/Name search only)
   const fetchData = async (query = "") => {
-  if (!query && !startDate && !endDate) setLoading(true);
+    if (!query && !startDate && !endDate) setLoading(true);
 
-  try {
-    let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
-    if (startDate && endDate)
-      url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
-    if (query)
-      url += `&search=${query}`;
+    try {
+      let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
+      if (startDate && endDate)
+        url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
+      if (query)
+        url += `&search=${query}`;
 
-    const token = localStorage.getItem("token");
-    const response = await fetch(url, {
-      headers: {
-        Authorization: token ? `Token ${token}` : undefined,
-      },
-    });
+      const token = localStorage.getItem("token");
+      const response = await fetch(url, {
+        headers: {
+          Authorization: token ? `Token ${token}` : undefined,
+        },
+      });
 
-    if (!response.ok) throw new Error(`Server error ${response.status}`);
-    const jsonData = await response.json();
+      if (!response.ok) throw new Error(`Server error ${response.status}`);
+      const jsonData = await response.json();
 
-    // ✅ Add S.No locally (for later S.No search)
-    const withSno = (jsonData.data || []).map((item, index) => ({
-      ...item,
-      sno: (currentPage - 1) * 10 + index + 1,
-    }));
+      // ✅ Add S.No for table only (not for search)
+      const withSno = (jsonData.data || []).map((item, index) => ({
+        ...item,
+        sno: (currentPage - 1) * 10 + index + 1,
+      }));
 
-    setData(withSno);
-    setTotalPages(jsonData.total_pages || 1);
-    setCurrentPage(jsonData.current_page || 1);
-    setTotalItems(jsonData.total_items || 0);
-    setErrorMsg("");
+      setData(withSno);
+      setTotalPages(jsonData.total_pages || 1);
+      setCurrentPage(jsonData.current_page || 1);
+      setTotalItems(jsonData.total_items || 0);
+      setErrorMsg("");
 
-    if (withSno.length === 0 && query) setErrorMsg("⚠️ No applicants found for your search.");
-  } catch (error) {
-    console.error("Failed to fetch API:", error);
-    setErrorMsg("⚠️ Failed to load data. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      if (withSno.length === 0 && query)
+        setErrorMsg("⚠️ No applicants found for your search.");
+    } catch (error) {
+      console.error("Failed to fetch API:", error);
+      setErrorMsg("⚠️ Failed to load data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) setCurrentPage(page);
@@ -141,7 +111,8 @@ const handleSearch = async () => {
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
 
-    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+    if (end - start + 1 < maxVisible)
+      start = Math.max(1, end - maxVisible + 1);
 
     for (let i = start; i <= end; i++) pageNumbers.push(i);
 
@@ -151,7 +122,14 @@ const handleSearch = async () => {
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>← Prev</Button>
 
         {pageNumbers.map((num) => (
-          <Button key={num} variant={num === currentPage ? "primary" : "outline-secondary"} className="mx-1" onClick={() => handlePageChange(num)}>{num}</Button>
+          <Button
+            key={num}
+            variant={num === currentPage ? "primary" : "outline-secondary"}
+            className="mx-1"
+            onClick={() => handlePageChange(num)}
+          >
+            {num}
+          </Button>
         ))}
 
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next →</Button>
@@ -231,12 +209,8 @@ const handleSearch = async () => {
                 {data.length > 0 ? (
                   data.map((connection, index) => (
                     <tr key={connection.id}>
-                      {/* ✅ Serial number */}
                       <td>{(currentPage - 1) * 10 + index + 1}</td>
-
-                      {/* ✅ True database ID */}
                       <td>{connection.id}</td>
-
                       <td>{connection.Applicant.Applicant_Name}</td>
                       <td>{connection.Applicant.Gender}</td>
                       <td>{connection.Applicant.District}</td>
@@ -252,12 +226,10 @@ const handleSearch = async () => {
                       <td>{connection.Reviewer_ID}</td>
                       <td>{connection.Reviewer_Name}</td>
                       <td>{connection.Reviewer_Comments}</td>
-
                       <td className="text-center d-flex gap-2">
                         <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>
                           Edit
                         </Link>
-
                         <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>
                           Delete
                         </button>

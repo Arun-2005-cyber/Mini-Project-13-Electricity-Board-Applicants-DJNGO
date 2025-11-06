@@ -50,7 +50,8 @@ def user_profile(request):
 
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def signup(request):
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
@@ -80,7 +81,8 @@ def signup(request):
 
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def login_view(request):
     if request.method == "POST":
         try:
@@ -139,7 +141,8 @@ def create_applicant(request):
 
 
 
-@csrf_exempt
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_applicant(request, id):
     if request.method != "DELETE":
         return JsonResponse({"error": "Invalid request"}, status=405)

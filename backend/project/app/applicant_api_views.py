@@ -47,6 +47,7 @@ class ApplicantCreateView(APIView):
 
                 # ✅ Create linked connection
                 Connection.objects.create(
+                    created_by=request.user,
                     Applicant=applicant,
                     Load_Applied=0,
                     Date_of_Application=timezone.now().date(),

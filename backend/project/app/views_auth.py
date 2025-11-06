@@ -112,13 +112,14 @@ def create_applicant(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
-    if not request.user.is_staff:  # only admin can create
-        return JsonResponse({"error": "Not authorized"}, status=403)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
 
     try:
         data = json.loads(request.body)
 
         applicant = Applicant.objects.create(
+            created_by=request.user, 
             Applicant_Name=data["Applicant_Name"],
             Gender=data["Gender"],
             District=data["District"],

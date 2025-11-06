@@ -27,6 +27,7 @@ class ApplicantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applicant
         fields = '__all__'
+        read_only_fields = ('created_by',)
 
 
 class StatusSerializer(serializers.ModelSerializer):

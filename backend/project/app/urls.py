@@ -7,7 +7,7 @@ from .applicant_api_views import (
     ApplicantListCreateAPIView,
     ConnectionRetrieveUpdateDestroyAPIView,ApplicantCreateView
 )
-from app.views_auth import signup, login_view, create_applicant, delete_applicant, user_profile
+from app.views_auth import signup, login_view, delete_applicant, user_profile
 
 urlpatterns = [
     path("", views.index, name="index"),

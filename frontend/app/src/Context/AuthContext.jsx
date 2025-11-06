@@ -45,14 +45,13 @@ const updateUser = (updatedUser) => {
 
           if (res.ok) {
             const data = await res.json();
-            setUser(data);
+             updateUser(data);
             localStorage.setItem("user", JSON.stringify(data));
           } else {
-            logout();
+            console.warn("Token invalid or expired");
           }
         } catch (error) {
           console.error("Auth check failed:", error);
-          logout();
         }
       }
     };

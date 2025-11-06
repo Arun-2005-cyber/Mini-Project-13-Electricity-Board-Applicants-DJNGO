@@ -44,33 +44,25 @@ function AddApplicant() {
   };
 
   const submitApplicant = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setErrorMsg("");
-  setSuccessMsg("");
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
 
-  try {
-    const res = await API_URL("/api/applicant/create/", {
-      method: "POST",
-      body: JSON.stringify(form),
-    });
+    try {
+      await axios.post(`${API_URL}/api/applicant/create/`, form, {
+        headers: { Authorization: `Token ${token}` },
+      });
 
-    const data = await res.json();
-
-    if (res.ok) {
       setSuccessMsg("✅ Applicant added successfully!");
 
-      setTimeout(() => navigate("/profile"), 500);
-    } else {
-      setErrorMsg(data.error || "❌ Failed to add applicant");
+      setTimeout(() => navigate("/profile"), 800);
+    } catch (error) {
+      setErrorMsg(error.response?.data?.detail || "❌ Failed to add applicant");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setErrorMsg("❌ Error submitting applicant");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="container mt-4" style={{ maxWidth: "500px" }}>

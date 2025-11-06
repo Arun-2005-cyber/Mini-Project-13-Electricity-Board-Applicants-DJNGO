@@ -56,7 +56,7 @@ function AddApplicant() {
 
       setSuccessMsg("✅ Applicant added successfully!");
 
-      setTimeout(() => navigate("/"), 800);
+      setTimeout(() => navigate("/profile"), 800);
     } catch (error) {
       setErrorMsg(error.response?.data?.detail || "❌ Failed to add applicant");
     } finally {

@@ -36,9 +36,9 @@ function ProfilePage() {
             username: data.username,
             email: data.email,
           });
-
+          
           setAppData({
-            total: data.total_applicants || 0,
+            total: data.total_applicants|| 0,
             list: data.applicants || [],
           });
         } else {

@@ -19,11 +19,14 @@ def user_profile(request):
     user = request.user
 
     if request.method == "GET":
+        # ✅ Fetch applicants created by logged-in user
+        applicants = Applicant.objects.filter(created_by=user).values("id", "Applicant_Name")
+        
         return Response({
             "username": user.username,
             "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name
+            "total_applicants": applicants.count(),
+            "applicants": applicants  # ✅ Include id + name
         })
 
     if request.method == "PUT":
@@ -39,13 +42,11 @@ def user_profile(request):
         user.last_name = request.data.get("last_name", user.last_name)
         user.save()
 
-        # ✅ Return updated data (IMPORTANT!)
         return Response({
             "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name
+            "email": user.email
         }, status=200)
+
 
 
 

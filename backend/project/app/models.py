@@ -60,7 +60,7 @@ class Connection(models.Model):
         ('Installation completed','Installation completed'),
         ('KYC failed','KYC failed'),
     ]
-
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     Applicant=models.ForeignKey(Applicant,on_delete=models.CASCADE)
     Load_Applied=models.IntegerField()
     Date_of_Application=models.DateField()

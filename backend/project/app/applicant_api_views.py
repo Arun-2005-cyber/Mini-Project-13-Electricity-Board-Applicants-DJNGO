@@ -32,20 +32,26 @@ class ConnectionRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
 
 # ✅ Correct Applicant create view (with auto Connection generation)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
 class ApplicantCreateView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         print("📩 Incoming POST data:", request.data)
+        print("🧍 Authenticated user:", request.user)
+        print("✅ Is Authenticated:", request.user.is_authenticated)
 
         serializer = ApplicantSerializer(data=request.data)
 
         try:
             if serializer.is_valid():
-                applicant = serializer.save()
-
+                applicant = serializer.save(created_by=request.user)
                 # ✅ Default status = Pending
                 default_status, _ = Status.objects.get_or_create(Status_Name="Pending")
 
-                # ✅ Create linked connection
                 Connection.objects.create(
                     created_by=request.user,
                     Applicant=applicant,

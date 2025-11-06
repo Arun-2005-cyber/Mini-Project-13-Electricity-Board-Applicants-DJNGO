@@ -26,7 +26,6 @@ urlpatterns = [
     path('applicant/create/', ApplicantCreateView.as_view()),
 
     # optional older admin endpoints (if you still want them)
-    path("admin/applicant/add/", create_applicant, name="create-applicant"),
     path("admin/applicant/delete/<int:id>/", delete_applicant, name="delete-applicant"),
     path("profile/", user_profile, name="user_profile"),
 ]

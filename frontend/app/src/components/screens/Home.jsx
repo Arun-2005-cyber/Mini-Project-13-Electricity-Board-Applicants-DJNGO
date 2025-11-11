@@ -84,15 +84,18 @@ function Home() {
     }
   };
 
-  // ✅ Clear filters (no reload)
-  const clearFilters = (e) => {
-    e.preventDefault();
-    setStartDate(null);
-    setEndDate(null);
-    setSearchQuery("");
-    setCurrentPage(1);
+const clearFilters = (e) => {
+  e.preventDefault();
+  setStartDate(null);
+  setEndDate(null);
+  setSearchQuery("");
+  setCurrentPage(1);
+
+  setTimeout(() => {
     fetchData();
-  };
+  }, 100);
+};
+
 
   const deleteApplicant = async (id) => {
     if (!window.confirm("Delete this applicant?")) return;

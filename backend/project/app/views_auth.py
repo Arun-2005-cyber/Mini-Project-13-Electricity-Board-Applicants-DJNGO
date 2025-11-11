@@ -19,14 +19,17 @@ from rest_framework.response import Response
 def user_profile(request):
     user = request.user
     if request.method == "GET":
-        # ✅ Fetch applicants created by logged-in user
-        applicants = Applicant.objects.filter(created_by=user).values("id", "Applicant_Name")
-        
+        # ✅ Admin-style view: show all applicants (not just created_by)
+        applicants = Applicant.objects.all().order_by("-id")[:10]  # show recent 10 applicants
+        total_count = Applicant.objects.count()
+
+        applicant_list = applicants.values("id", "Applicant_Name")
+
         return Response({
             "username": user.username,
             "email": user.email,
-            "total_applicants": applicants.count(),
-            "applicants": applicants  # ✅ Include id + name
+            "total_applicants": total_count,
+            "applicants": applicant_list,  # ✅ include id + name
         })
 
     if request.method == "PUT":
@@ -46,8 +49,6 @@ def user_profile(request):
             "username": user.username,
             "email": user.email
         }, status=200)
-
-
 
 
 @api_view(['POST'])

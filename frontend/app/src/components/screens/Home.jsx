@@ -28,36 +28,16 @@ function Home() {
     }
   }, [location.state]);
 
+  // ✅ Fetch data whenever filters change
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
+    const delay = setTimeout(() => {
       fetchData();
     }, 400);
-    return () => clearTimeout(delayDebounce);
+    return () => clearTimeout(delay);
   }, [currentPage, startDate, endDate, searchQuery]);
 
-  const deleteApplicant = async (id) => {
-    if (!window.confirm("Delete this applicant?")) return;
-
-    try {
-      await axios.delete(`${API_URL}/api/connection/${id}/`, {
-        headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        }
-      });
-
-      fetchData();
-      alert("Applicant deleted successfully");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to delete applicant");
-    }
-  };
-
   const fetchData = async () => {
-    if (!searchQuery && !startDate && !endDate) {
-      setLoading(true);
-    }
-
+    setLoading(true);
     try {
       let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
       if (startDate && endDate)
@@ -79,10 +59,12 @@ function Home() {
       setTotalPages(jsonData.total_pages || 1);
       setCurrentPage(jsonData.current_page || 1);
       setTotalItems(jsonData.total_items || 0);
-      setErrorMsg("");
 
-      if (jsonData.data?.length === 0 && searchQuery) {
+      // ✅ Show message only after data is fetched
+      if ((jsonData.data?.length ?? 0) === 0 && searchQuery) {
         setErrorMsg("⚠️ No applicants found for your search.");
+      } else {
+        setErrorMsg("");
       }
     } catch (error) {
       console.error("Failed to fetch API:", error);
@@ -96,12 +78,36 @@ function Home() {
     if (page > 0 && page <= totalPages) setCurrentPage(page);
   };
 
+  const clearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setSearchQuery("");
+    setCurrentPage(1);
+    fetchData();
+  };
+
+  const deleteApplicant = async (id) => {
+    if (!window.confirm("Delete this applicant?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/api/connection/${id}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem("token")}`,
+        }
+      });
+      fetchData();
+      alert("Applicant deleted successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete applicant");
+    }
+  };
+
   const renderPagination = () => {
     const pageNumbers = [];
     const maxVisible = 5;
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
-
     if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
 
     for (let i = start; i <= end; i++) pageNumbers.push(i);
@@ -110,11 +116,9 @@ function Home() {
       <div className="d-flex justify-content-center align-items-center mt-4 flex-wrap">
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(1)}>⏮ First</Button>
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>← Prev</Button>
-
         {pageNumbers.map((num) => (
           <Button key={num} variant={num === currentPage ? "primary" : "outline-secondary"} className="mx-1" onClick={() => handlePageChange(num)}>{num}</Button>
         ))}
-
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Next →</Button>
         <Button variant="outline-secondary" className="mx-1" disabled={currentPage === totalPages} onClick={() => handlePageChange(totalPages)}>Last ⏭</Button>
       </div>
@@ -127,7 +131,7 @@ function Home() {
       <hr />
 
       {successMsg && <Alert variant="success">{successMsg}</Alert>}
-      {errorMsg && <Alert variant="danger">{errorMsg}</Alert>}
+      {errorMsg && !loading && <Alert variant="danger">{errorMsg}</Alert>}
       {loading && (
         <div className="text-center my-4">
           <Spinner animation="border" /> <p>Loading data...</p>
@@ -147,9 +151,13 @@ function Home() {
               <Datepicker selected={endDate} className="form-control" onChange={setEndDate} placeholderText="To Date" />
             </Col>
 
-            <Col md={3}></Col>
+            <Col md={2}>
+              <Button variant="secondary" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            </Col>
 
-            <Col md={5}>
+            <Col md={6}>
               <input
                 type="text"
                 className="form-control"
@@ -187,17 +195,12 @@ function Home() {
                   <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {data.length > 0 ? (
                   data.map((connection, index) => (
                     <tr key={connection.id}>
-                      {/* ✅ Serial number */}
                       <td>{(currentPage - 1) * 10 + index + 1}</td>
-
-                      {/* ✅ True database ID */}
                       <td>{connection.id}</td>
-
                       <td>{connection.Applicant.Applicant_Name}</td>
                       <td>{connection.Applicant.Gender}</td>
                       <td>{connection.Applicant.District}</td>
@@ -213,12 +216,10 @@ function Home() {
                       <td>{connection.Reviewer_ID}</td>
                       <td>{connection.Reviewer_Name}</td>
                       <td>{connection.Reviewer_Comments}</td>
-
                       <td className="text-center d-flex gap-2">
                         <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>
                           Edit
                         </Link>
-
                         <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>
                           Delete
                         </button>
@@ -227,7 +228,9 @@ function Home() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="17" className="text-center text-muted">No records found</td>
+                    <td colSpan="17" className="text-center text-muted">
+                      No records found
+                    </td>
                   </tr>
                 )}
               </tbody>

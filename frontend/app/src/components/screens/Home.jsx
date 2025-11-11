@@ -20,6 +20,7 @@ function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const location = useLocation();
 
+  // ✅ Success alert timeout
   useEffect(() => {
     if (location.state?.successMsg) {
       setSuccessMsg(location.state.successMsg);
@@ -28,13 +29,10 @@ function Home() {
     }
   }, [location.state]);
 
-  // ✅ Fetch data whenever filters change
+  // ✅ Fetch applicants only when filters change manually (not every keystroke)
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchData();
-    }, 400);
-    return () => clearTimeout(delay);
-  }, [currentPage, startDate, endDate, searchQuery]);
+    fetchData();
+  }, [currentPage, startDate, endDate]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -42,13 +40,13 @@ function Home() {
       let url = `${API_URL}/api/getApplicantsData/?page=${currentPage}`;
       if (startDate && endDate)
         url += `&start_date=${startDate.toISOString().split("T")[0]}&end_date=${endDate.toISOString().split("T")[0]}`;
-      if (searchQuery)
-        url += `&search=${searchQuery}`;
+      if (searchQuery.trim())
+        url += `&search=${searchQuery.trim()}`;
 
       const token = localStorage.getItem("token");
       const response = await fetch(url, {
         headers: {
-          "Authorization": token ? `Token ${token}` : undefined,
+          Authorization: token ? `Token ${token}` : undefined,
         },
       });
 
@@ -60,12 +58,11 @@ function Home() {
       setCurrentPage(jsonData.current_page || 1);
       setTotalItems(jsonData.total_items || 0);
 
-      // ✅ Show message only after data is fetched
-      if ((jsonData.data?.length ?? 0) === 0 && searchQuery) {
-        setErrorMsg("⚠️ No applicants found for your search.");
-      } else {
-        setErrorMsg("");
-      }
+      setErrorMsg(
+        (jsonData.data?.length ?? 0) === 0 && searchQuery
+          ? "⚠️ No applicants found for your search."
+          : ""
+      );
     } catch (error) {
       console.error("Failed to fetch API:", error);
       setErrorMsg("⚠️ Failed to load data. Please try again later.");
@@ -74,11 +71,22 @@ function Home() {
     }
   };
 
-  const handlePageChange = (page) => {
-    if (page > 0 && page <= totalPages) setCurrentPage(page);
+  // ✅ Manual search trigger
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchData();
   };
 
-  const clearFilters = () => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  // ✅ Clear filters (no reload)
+  const clearFilters = (e) => {
+    e.preventDefault();
     setStartDate(null);
     setEndDate(null);
     setSearchQuery("");
@@ -88,19 +96,20 @@ function Home() {
 
   const deleteApplicant = async (id) => {
     if (!window.confirm("Delete this applicant?")) return;
-
     try {
       await axios.delete(`${API_URL}/api/connection/${id}/`, {
-        headers: {
-          Authorization: `Token ${localStorage.getItem("token")}`,
-        }
+        headers: { Authorization: `Token ${localStorage.getItem("token")}` },
       });
-      fetchData();
       alert("Applicant deleted successfully");
+      fetchData();
     } catch (error) {
       console.error(error);
       alert("Failed to delete applicant");
     }
+  };
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) setCurrentPage(page);
   };
 
   const renderPagination = () => {
@@ -152,22 +161,21 @@ function Home() {
             </Col>
 
             <Col md={2}>
-              <Button variant="secondary" onClick={clearFilters}>
+              <Button variant="outline-danger" onClick={clearFilters}>
                 Clear Filters
               </Button>
             </Col>
 
-            <Col md={6}>
+            <Col md={6} className="d-flex gap-2">
               <input
                 type="text"
                 className="form-control"
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Search by applicant ID or name"
               />
+              <Button variant="primary" onClick={handleSearch}>Search</Button>
             </Col>
           </Row>
 
@@ -217,20 +225,14 @@ function Home() {
                       <td>{connection.Reviewer_Name}</td>
                       <td>{connection.Reviewer_Comments}</td>
                       <td className="text-center d-flex gap-2">
-                        <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>
-                          Edit
-                        </Link>
-                        <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>
-                          Delete
-                        </button>
+                        <Link className="btn btn-outline-primary btn-sm" to={`/EditApplicant/${connection.id}`}>Edit</Link>
+                        <button className="btn btn-danger btn-sm" onClick={() => deleteApplicant(connection.id)}>Delete</button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="17" className="text-center text-muted">
-                      No records found
-                    </td>
+                    <td colSpan="17" className="text-center text-muted">No records found</td>
                   </tr>
                 )}
               </tbody>

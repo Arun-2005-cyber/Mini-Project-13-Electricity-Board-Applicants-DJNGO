@@ -4,6 +4,8 @@ import { useAuth } from "../../Context/AuthContext";
 import Loader from "../Loader";
 import Message from "../Message";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 
 function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -13,7 +15,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "info" });
   const [appData, setAppData] = useState({ total: 0, list: [] });
-
+  const location = useLocation();
   // ✅ Auto-clear message after 3 seconds
   useEffect(() => {
     if (message.text) {
@@ -42,7 +44,7 @@ function ProfilePage() {
       }
     }
     fetchProfile();
-  }, []);
+  }, [location.pathname]);
 
   // ✅ Update profile info
   const updateProfile = async (e) => {

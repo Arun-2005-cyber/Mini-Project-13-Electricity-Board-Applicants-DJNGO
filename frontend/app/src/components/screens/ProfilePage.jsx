@@ -3,14 +3,18 @@ import { apiFetch } from "../../utils/api";
 import { useAuth } from "../../Context/AuthContext";
 import Loader from "../Loader";
 import Message from "../Message";
+import { useNavigate } from "react-router-dom";
 
 function ProfilePage() {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({ username: "", email: "" });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "info" });
   const [appData, setAppData] = useState({ total: 0, list: [] });
 
+  // ✅ Auto-clear message after 3 seconds
   useEffect(() => {
     if (message.text) {
       const timer = setTimeout(() => setMessage({ text: "", type: "info" }), 3000);
@@ -18,6 +22,7 @@ function ProfilePage() {
     }
   }, [message]);
 
+  // ✅ Fetch profile data
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -39,6 +44,7 @@ function ProfilePage() {
     fetchProfile();
   }, []);
 
+  // ✅ Update profile info
   const updateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -97,7 +103,15 @@ function ProfilePage() {
       </div>
 
       <hr />
-      <h5>Recent Applicants ({appData.total})</h5>
+      <div className="d-flex justify-content-between align-items-center">
+        <h5>Recent Applicants ({appData.total})</h5>
+        <button
+          className="btn btn-outline-primary btn-sm"
+          onClick={() => navigate("/")}
+        >
+          🔍 View All Applicants
+        </button>
+      </div>
       <p className="text-muted">Admin can view and edit all recent applications below.</p>
 
       <ul className="list-group mt-2">

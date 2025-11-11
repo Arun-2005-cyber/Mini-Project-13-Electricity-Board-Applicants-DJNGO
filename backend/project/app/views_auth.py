@@ -13,23 +13,31 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import UserProfileSerializer
 from rest_framework.response import Response
 
+from .models import Applicant, Connection
 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
     user = request.user
-    if request.method == "GET":
-        # ✅ Admin-style view: show all applicants (not just created_by)
-        applicants = Applicant.objects.all().order_by("-id")[:10]  # show recent 10 applicants
-        total_count = Applicant.objects.count()
 
-        applicant_list = applicants.values("id", "Applicant_Name")
+    if request.method == "GET":
+        # ✅ Fetch latest 10 connections (same data source as Home)
+        connections = Connection.objects.select_related("Applicant").order_by("-id")[:10]
+        total_count = Connection.objects.count()
+
+        applicant_list = [
+            {
+                "id": conn.id,  # ✅ show Connection ID (same as Home table)
+                "Applicant_Name": conn.Applicant.Applicant_Name,
+            }
+            for conn in connections
+        ]
 
         return Response({
             "username": user.username,
             "email": user.email,
             "total_applicants": total_count,
-            "applicants": applicant_list,  # ✅ include id + name
+            "applicants": applicant_list,
         })
 
     if request.method == "PUT":
@@ -49,6 +57,7 @@ def user_profile(request):
             "username": user.username,
             "email": user.email
         }, status=200)
+
 
 
 @api_view(['POST'])

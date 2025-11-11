@@ -84,58 +84,63 @@ function Home() {
     }
   };
 
-const clearFilters = async (e) => {
-  e.preventDefault();
+  const clearFilters = async (e) => {
+    e.preventDefault();
 
-  // 1️⃣ Reset all filters
-  setStartDate(null);
-  setEndDate(null);
-  setSearchQuery("");
-  setCurrentPage(1);
+    // 1️⃣ Reset all filters
+    setStartDate(null);
+    setEndDate(null);
+    setSearchQuery("");
+    setCurrentPage(1);
 
-  // 2️⃣ Immediately fetch unfiltered data
-  setLoading(true);
-  try {
-    const url = `${API_URL}/api/getApplicantsData/?page=1`;
-    const token = localStorage.getItem("token");
-    const response = await fetch(url, {
-      headers: {
-        Authorization: token ? `Token ${token}` : undefined,
-      },
-    });
+    // 2️⃣ Immediately fetch unfiltered data
+    setLoading(true);
+    try {
+      const url = `${API_URL}/api/getApplicantsData/?page=1`;
+      const token = localStorage.getItem("token");
+      const response = await fetch(url, {
+        headers: {
+          Authorization: token ? `Token ${token}` : undefined,
+        },
+      });
 
-    if (!response.ok) throw new Error(`Server error ${response.status}`);
-    const jsonData = await response.json();
+      if (!response.ok) throw new Error(`Server error ${response.status}`);
+      const jsonData = await response.json();
 
-    // 3️⃣ Update state directly
-    setData(jsonData.data || []);
-    setTotalPages(jsonData.total_pages || 1);
-    setTotalItems(jsonData.total_items || 0);
-    setErrorMsg("");
-  } catch (error) {
-    console.error("Failed to fetch API:", error);
-    setErrorMsg("⚠️ Failed to load data. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
+      // 3️⃣ Update state directly
+      setData(jsonData.data || []);
+      setTotalPages(jsonData.total_pages || 1);
+      setTotalItems(jsonData.total_items || 0);
+      setErrorMsg("");
+    } catch (error) {
+      console.error("Failed to fetch API:", error);
+      setErrorMsg("⚠️ Failed to load data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
 
   const deleteApplicant = async (id) => {
     if (!window.confirm("Delete this applicant?")) return;
+
+    setLoading(true); // 🌀 show loader
     try {
       await axios.delete(`${API_URL}/api/connection/${id}/`, {
         headers: { Authorization: `Token ${localStorage.getItem("token")}` },
       });
-      alert("Applicant deleted successfully");
-      fetchData();
+      alert("✅ Applicant deleted successfully");
+      await fetchData(); // reload table
     } catch (error) {
       console.error(error);
-      alert("Failed to delete applicant");
+      alert("❌ Failed to delete applicant");
+    } finally {
+      setLoading(false); // stop loader
     }
   };
+
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) setCurrentPage(page);

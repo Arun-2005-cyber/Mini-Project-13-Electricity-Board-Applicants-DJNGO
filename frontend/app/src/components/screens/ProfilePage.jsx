@@ -121,12 +121,21 @@ function ProfilePage() {
           <li className="list-group-item text-muted">No recent applicants found</li>
         ) : (
           appData.list.map((a) => (
-            <li className="list-group-item" key={a.id}>
-              #{a.id} — {a.Applicant_Name}
+            <li
+              className="list-group-item d-flex justify-content-between align-items-center"
+              key={a.id}
+            >
+              <div>
+                <strong>#{a.id}</strong> — {a.Applicant_Name}
+                <div className="text-muted small">
+                  {a.Gender} | {a.District}, {a.State}
+                </div>
+              </div>
             </li>
           ))
         )}
       </ul>
+
     </div>
   );
 }

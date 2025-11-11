@@ -29,6 +29,9 @@ def user_profile(request):
             {
                 "id": conn.id,  # ✅ show Connection ID (same as Home table)
                 "Applicant_Name": conn.Applicant.Applicant_Name,
+                "Gender": conn.Applicant.Gender,
+                "District": conn.Applicant.District,
+                "State": conn.Applicant.State,
             }
             for conn in connections
         ]

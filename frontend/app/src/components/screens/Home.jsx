@@ -90,12 +90,8 @@ const clearFilters = (e) => {
   setEndDate(null);
   setSearchQuery("");
   setCurrentPage(1);
-
-  // Wait for state updates to complete before fetching
-  setTimeout(() => {
-    fetchData();
-  }, 100);
 };
+
 
 
   const deleteApplicant = async (id) => {

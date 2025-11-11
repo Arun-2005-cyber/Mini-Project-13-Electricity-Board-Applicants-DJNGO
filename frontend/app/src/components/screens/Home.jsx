@@ -84,13 +84,42 @@ function Home() {
     }
   };
 
-const clearFilters = (e) => {
+const clearFilters = async (e) => {
   e.preventDefault();
+
+  // 1️⃣ Reset all filters
   setStartDate(null);
   setEndDate(null);
   setSearchQuery("");
   setCurrentPage(1);
+
+  // 2️⃣ Immediately fetch unfiltered data
+  setLoading(true);
+  try {
+    const url = `${API_URL}/api/getApplicantsData/?page=1`;
+    const token = localStorage.getItem("token");
+    const response = await fetch(url, {
+      headers: {
+        Authorization: token ? `Token ${token}` : undefined,
+      },
+    });
+
+    if (!response.ok) throw new Error(`Server error ${response.status}`);
+    const jsonData = await response.json();
+
+    // 3️⃣ Update state directly
+    setData(jsonData.data || []);
+    setTotalPages(jsonData.total_pages || 1);
+    setTotalItems(jsonData.total_items || 0);
+    setErrorMsg("");
+  } catch (error) {
+    console.error("Failed to fetch API:", error);
+    setErrorMsg("⚠️ Failed to load data. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
 };
+
 
 
 

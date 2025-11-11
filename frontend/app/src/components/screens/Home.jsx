@@ -84,19 +84,18 @@ function Home() {
     }
   };
 
-
 const clearFilters = (e) => {
   e.preventDefault();
   setStartDate(null);
   setEndDate(null);
   setSearchQuery("");
   setCurrentPage(1);
+
+  // Wait for state updates to complete before fetching
+  setTimeout(() => {
+    fetchData();
+  }, 100);
 };
-
-useEffect(() => {
-  fetchData();
-}, [currentPage, startDate, endDate, searchQuery]);
-
 
 
   const deleteApplicant = async (id) => {
